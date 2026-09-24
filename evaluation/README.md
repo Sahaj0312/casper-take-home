@@ -1,7 +1,8 @@
 # Baseline evaluation
 
-Production pipeline files are unchanged. Expectations in `cases.json` were
-written from recipe/review text before any new model call. Existing saved
+The two baseline reports preserve the original pipeline. The editor fixes and
+offline replay results are documented at the end of this file. Natural-language
+expectations in `cases.json` were written from recipe/review text before any new model call. Existing saved
 outputs had already been inspected during the initial review; they are not
 used as expected answers or replayed as model output.
 
@@ -12,7 +13,7 @@ From the repository root (Python 3.13+, existing project dependencies):
 ```sh
 uv sync
 .venv/bin/python evaluation/run.py
-.venv/bin/python -m unittest evaluation.test_evaluation
+.venv/bin/python -m unittest evaluation.test_evaluation evaluation.test_recipe_modifier
 ```
 
 The default evaluation is offline. To also run the **current, unchanged**
@@ -197,3 +198,68 @@ proves the existing modifier can apply one complete, carefully anchored plan.
 These two live responses establish concrete failures, not their frequency,
 general extraction accuracy, or culinary outcomes. The historical sample
 outputs remain separate evidence with uncertain generating-code provenance.
+
+## Editor fixes and saved-proposal replay
+
+The editor now requires one case-insensitive **literal occurrence** across the
+target list. Repeated targets (within a line, across lines, or overlapping) are
+ambiguous and rejected. Replacements splice that span, so capitalization and
+short instruction snippets work. Removal requires a whole-line match; it never
+deletes a merely similar ingredient or an instruction containing only a matching
+fragment. Empty anchors, missing/blank payloads, and no-op replacements are
+rejected. A rejection leaves content unchanged, logs the reason, and returns no
+change record. Input recipes are not mutated. The validation helper uses the
+same rules against sequentially updated content.
+
+The existing `(content, records)` API is preserved. Edits are still processed
+sequentially; rejecting one edit does not roll back earlier valid edits or reject
+the whole recipe. A structured partial/rejected pipeline outcome remains future
+work. The legacy similarity-threshold constructor argument is accepted for
+compatibility but no longer enables fuzzy matching.
+
+Fixture version 2 strengthens `broth_unchanged`: **all** ingredient lines
+mentioning broth or stock must equal the single original broth line. Extra,
+duplicate, combined, or altered broth entries fail. The natural-language
+expectation is unchanged; this repairs the checker after its observed false
+pass. Baseline files retain their original results and hashes.
+
+Replay without model calls:
+
+```sh
+.venv/bin/python evaluation/run.py --replay evaluation/baseline_live.json \
+  --output test_output/editor_replay.json
+```
+
+The committed `editor_replay.json` was produced with the same command, using
+`--output evaluation/editor_replay.json`. Replay verifies the archived review
+and original recipe content, substitutes the saved parsed proposal at the
+extraction boundary, and runs the current editor and generator. The report
+includes the source archive hash and before/after content. `--replay` and
+`--live` are mutually exclusive; tests assert that neither extraction nor the
+model client is called during replay.
+
+| Check | Result after editor fixes |
+| --- | --- |
+| Case-variant quantity replacement | Pass: quantity changes and record matches. |
+| Short temperature span | Pass: only `200 C` becomes `220 C`. |
+| Missing pumpkin-seed target | Pass: sunflower seeds retained, no change record. |
+| Complete hand-written cookie plan | Pass: all six edits still apply. |
+| No-tweaks recipe | Pass: no extraction or edits. |
+| Saved cookie and soup proposals | Application/ledger/packaging checks pass; both final recipes exactly match the live baseline. Zero model calls. |
+| Soup broth check | Now correctly fails on the extra 2-cup broth entry. |
+
+All **19 regression/evaluator tests pass**, including empty/missing/ambiguous
+targets, no-op records, whole-line removal, missing payloads, sequential edits,
+replay input mismatch, and extra/duplicate broth. The new editor regressions
+were run before implementation and reproduced failures in the old editor.
+
+The replay command intentionally exits **1**: the archived proposals still fail
+extraction screening. Cookie omissions and the unsupported soup substitution
+are unchanged; the editor correctly executes those uniquely anchored edits.
+The raw report's semantic-review-pending counters are automatic. Manual review
+confirms unchanged cookie content and unchanged soup content, with the soup
+false pass now corrected (0/5 screening checks pass). No extractor or prompt
+changes, live calls, or baseline rewrites were made in this checkpoint.
+
+Next: fix evidence-backed extraction completeness and tried-versus-planned
+handling, then validate dependent instructions and unsupported quantities.

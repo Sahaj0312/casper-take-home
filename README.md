@@ -90,12 +90,16 @@ Original scraped recipes in `data/` directory contain reviews with `has_modifica
 The LLM Analysis Pipeline processes recipes in 3 steps:
 
 1. **Tweak Extraction**: Selects one random review with modifications and uses GPT-4o-mini to extract structured changes
-2. **Recipe Modification**: Applies changes to the original recipe using fuzzy string matching
+2. **Recipe Modification**: Applies edits to unique, case-insensitive literal targets; rejects missing/ambiguous targets and records only actual changes
 3. **Enhanced Recipe Generation**: Creates enhanced version with full citation tracking back to source review
 
 Each run produces one enhanced recipe per original recipe, with complete attribution showing exactly what changed and why.
 
 ## Development
+
+For offline regression tests and saved-proposal replay, see
+[`evaluation/README.md`](evaluation/README.md). Original baseline reports are
+preserved separately from the editor-fix replay results.
 
 ```bash
 # Add dependencies

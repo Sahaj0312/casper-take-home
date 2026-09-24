@@ -8,7 +8,7 @@ import unittest
 from unittest.mock import patch
 
 from loguru import logger
-from evaluation.run import audit_records, evaluate_case, load_case, reference_edit
+from evaluation.run import audit_records, check_content, evaluate_case, load_case, reference_edit
 from llm_pipeline.models import ChangeRecord, ModificationEdit
 
 CASES = json.loads((Path(__file__).parent / "cases.json").read_text())["cases"]
@@ -88,6 +88,55 @@ class EvaluationTests(unittest.TestCase):
             result = evaluate_case(CASES[2], False, None, directory)
         extract.assert_not_called()
         self.assertEqual(result["no_tweaks"]["status"], "passed")
+
+    def test_broth_invariant_checks_all_entries_not_just_original_presence(self):
+        case = CASES[1]
+        raw = load_case(case)
+        original = {field: raw[field] for field in ("ingredients", "instructions")}
+
+        def broth_passes(candidate):
+            return next(c["passed"] for c in check_content(case, candidate) if c["id"] == "broth_unchanged")
+
+        self.assertTrue(broth_passes(original))
+        for extra in ("2 cups chicken broth", "1 cup vegetable stock",
+                      "3 cups chicken broth, homemade or from a carton or can"):
+            with self.subTest(extra=extra):
+                self.assertFalse(broth_passes(dict(original, ingredients=original["ingredients"] + [extra])))
+        for replacement in ("5 cups chicken broth", "3 cups chicken broth plus 2 cups broth"):
+            ingredients = [replacement if "chicken broth" in line else line for line in original["ingredients"]]
+            self.assertFalse(broth_passes(dict(original, ingredients=ingredients)))
+
+    def test_saved_proposals_replay_without_extraction_or_network(self):
+        saved = json.loads((Path(__file__).parent / "baseline_live.json").read_text())
+        with TemporaryDirectory() as directory, patch(
+            "llm_pipeline.tweak_extractor.TweakExtractor.extract_modification",
+            side_effect=AssertionError("replay must not extract"),
+        ) as extract, patch(
+            "openai.resources.chat.completions.Completions.create",
+            side_effect=AssertionError("replay must not call model"),
+        ) as create:
+            for case, archived in zip(CASES[:2], saved["cases"]):
+                with self.subTest(case=case["id"]):
+                    result = evaluate_case(case, False, None, directory, archived)
+                    self.assertEqual(result["extraction"]["status"], "replayed")
+                    self.assertEqual(result["actual_application"]["status"], "passed")
+                    self.assertEqual(result["replay_comparison"], {
+                        "proposal_unchanged": True, "content_matches_saved_run": True, "llm_calls": 0,
+                    })
+                    self.assertEqual(result["extraction"]["content_screening"]["status"], "failed")
+                    if case["id"] == "soup_tried_vs_planned":
+                        checks = result["actual_application"]["final_content_checks"]
+                        self.assertFalse(next(c["passed"] for c in checks if c["id"] == "broth_unchanged"))
+            extract.assert_not_called()
+            create.assert_not_called()
+
+    def test_replay_rejects_changed_inputs(self):
+        saved = json.loads((Path(__file__).parent / "baseline_live.json").read_text())["cases"][0]
+        with TemporaryDirectory() as directory:
+            with self.assertRaises(ValueError):
+                evaluate_case(CASES[0], False, None, directory, dict(saved, review_text="different review"))
+            with self.assertRaises(ValueError):
+                evaluate_case(CASES[0], False, None, directory, dict(saved, original_content={}))
 
 
 if __name__ == "__main__":

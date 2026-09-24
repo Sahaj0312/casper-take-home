@@ -42,21 +42,21 @@ def reference_edit(before, edit):
     marked unresolved. Removal requires a whole-line match, not a substring.
     This is an evaluation oracle, never used to produce pipeline output.
     """
-    if not edit.find:
+    if not edit.find.strip():
         return None, "empty anchor"
     matches = [
-        (i, match) for i, line in enumerate(before)
-        for match in re.finditer(re.escape(edit.find), line, re.IGNORECASE)
+        (i, match.span(1)) for i, line in enumerate(before)
+        for match in re.finditer(f"(?=({re.escape(edit.find)}))", line, re.IGNORECASE)
     ]
     if len(matches) != 1:
         return None, f"expected one literal anchor, found {len(matches)}"
-    i, match = matches[0]
+    i, (start, end) = matches[0]
     expected = list(before)
-    if edit.operation == "replace" and edit.replace:
-        expected[i] = before[i][:match.start()] + edit.replace + before[i][match.end():]
-    elif edit.operation == "add_after" and edit.add:
+    if edit.operation == "replace" and edit.replace and edit.replace.strip():
+        expected[i] = before[i][:start] + edit.replace + before[i][end:]
+    elif edit.operation == "add_after" and edit.add and edit.add.strip():
         expected.insert(i + 1, edit.add)
-    elif edit.operation == "remove" and match.span() == (0, len(before[i])):
+    elif edit.operation == "remove" and (start, end) == (0, len(before[i])):
         expected.pop(i)
     else:
         return None, "missing payload or non-whole-line removal"
@@ -104,7 +104,10 @@ def check_content(case, candidate):
     results = []
     for check in case.get("checks", []):
         lines = candidate[check["target"]]
-        if "exact_line" in check:
+        if "expected_lines" in check:
+            observed = [line for line in lines if re.search(check["matching_pattern"], line, re.IGNORECASE)]
+            passed = observed == check["expected_lines"]
+        elif "exact_line" in check:
             passed = check["exact_line"] in lines
         else:
             found = bool(re.search(check["pattern"], "\n".join(lines), re.IGNORECASE))
@@ -209,10 +212,16 @@ def load_case(case):
     return raw
 
 
-def evaluate_case(case, live, api_key, output_dir):
+def evaluate_case(case, live, api_key, output_dir, replay_case=None):
     raw = load_case(case)
-    pipeline = LLMAnalysisPipeline(openai_api_key=api_key or "offline-unused", output_dir=output_dir)
+    pipeline = LLMAnalysisPipeline(openai_api_key=(api_key if live else None) or "offline-unused", output_dir=output_dir)
     recipe = pipeline.parse_recipe_data(raw)
+    if replay_case is not None:
+        if (replay_case["id"] != case["id"] or replay_case["review_text"] != case["review_text"]
+                or replay_case["original_content"] != content(recipe)):
+            raise ValueError(f"{case['id']}: replay input does not match pinned recipe/review")
+        if not replay_case.get("extraction", {}).get("proposal"):
+            raise ValueError(f"{case['id']}: no saved model proposal to replay")
     result = {"id": case["id"], "review_text": case["review_text"],
               "original_content": content(recipe), "expected_behavior": case["expected_behavior"]}
     if "oracle_edits" in case:
@@ -224,7 +233,7 @@ def evaluate_case(case, live, api_key, output_dir):
     if "recipe_file" not in case:
         result["extraction"] = {"status": "not_applicable", "reason": "isolated adversarial application case"}
         return result
-    if case["review_text"] is not None and (not live or not api_key):
+    if case["review_text"] is not None and replay_case is None and (not live or not api_key):
         result["extraction"] = {
             "status": "blocked" if not api_key else "not_run",
             "reason": "OPENAI_API_KEY is missing" if not api_key else "pass --live to call the model",
@@ -241,8 +250,8 @@ def evaluate_case(case, live, api_key, output_dir):
     def capture_request(**kwargs):
         attempt = {"request": kwargs}
         extraction["attempts"].append(attempt)
-        if case["review_text"] is None:
-            raise AssertionError("no-tweaks case attempted an LLM request")
+        if case["review_text"] is None or replay_case is not None:
+            raise AssertionError("offline case attempted an LLM request")
         try:
             response = real_create(**kwargs)
             attempt["response"] = response.model_dump(mode="json")
@@ -256,7 +265,8 @@ def evaluate_case(case, live, api_key, output_dir):
     def capture_extraction(review, recipe):
         if review.text != case["review_text"]:
             raise AssertionError("pipeline selected a different review")
-        extracted = real_extract(review, recipe)
+        extracted = (ModificationObject(**replay_case["extraction"]["proposal"])
+                     if replay_case is not None else real_extract(review, recipe))
         extraction["proposal"] = extracted.model_dump(exclude_none=True) if extracted is not None else None
         return extracted
 
@@ -283,7 +293,7 @@ def evaluate_case(case, live, api_key, output_dir):
                                "returned": None if enhanced is None else enhanced.model_dump(),
                                "extraction_calls": select.call_count, "llm_calls": len(extraction["attempts"])}
     else:
-        extraction["status"] = "returned" if extraction["proposal"] is not None else "failed"
+        extraction["status"] = ("replayed" if replay_case is not None else "returned") if extraction["proposal"] is not None else "failed"
         extraction["semantic_review"] = "pending: compare each expected behavior with proposal; check wording, order, omissions, unsupported edits and quantity assumptions"
         if "actual_application" in result:
             projection = result["actual_application"]["proposal_projection"]
@@ -304,12 +314,20 @@ def evaluate_case(case, live, api_key, output_dir):
             "count_matches_records": enhanced.enhancement_summary.total_changes == len(records),
             "source_matches": all(m.source_review.text == case["review_text"] for m in enhanced.modifications_applied),
         }
+    if replay_case is not None:
+        result["replay_comparison"] = {
+            "proposal_unchanged": extraction["proposal"] == replay_case["extraction"]["proposal"],
+            "content_matches_saved_run": result.get("actual_application", {}).get("actual_content") == replay_case["actual_application"]["actual_content"],
+            "llm_calls": len(extraction["attempts"]),
+        }
     return result
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--live", action="store_true", help="call the unchanged extractor for pinned real reviews")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--live", action="store_true", help="call the unchanged extractor for pinned real reviews")
+    mode.add_argument("--replay", type=Path, help="replay parsed proposals from a saved live report; never call the model")
     parser.add_argument("--case", action="append", dest="cases", help="case ID; repeat to select several")
     parser.add_argument("--output", type=Path, default=ROOT / "test_output/evaluation.json")
     args = parser.parse_args()
@@ -325,6 +343,16 @@ def main():
         if unknown:
             parser.error(f"unknown cases: {sorted(unknown)}")
         cases = [c for c in cases if c["id"] in args.cases]
+    replay_cases = {}
+    if args.replay:
+        saved = json.loads(args.replay.read_text())
+        replay_cases = {c["id"]: c for c in saved["cases"]}
+        if len(replay_cases) != len(saved["cases"]):
+            parser.error("duplicate case IDs in replay report")
+        missing = [c["id"] for c in cases if "recipe_file" in c and c["review_text"] is not None
+                   and c["id"] not in replay_cases]
+        if missing:
+            parser.error(f"replay report lacks proposals for {missing}")
     paths = list((ROOT / "src/llm_pipeline").glob("*.py")) + [fixture_path, Path(__file__).resolve()]
     paths += [ROOT / c["recipe_file"] for c in cases if "recipe_file" in c]
     report = {
@@ -337,8 +365,10 @@ def main():
         "selection": "exact review text; only that review supplied to unmodified orchestrator",
         "limitations": "Fixed selection is reproducible; live model responses are not guaranteed deterministic. Regex checks are screening aids; semantic review is required. Oracle edits are not extractor output.",
     }
+    if args.replay:
+        report["replay_source"] = {"path": str(args.replay), "sha256": digest(args.replay)}
     with TemporaryDirectory(prefix="casper-evaluation-") as output_dir:
-        report["cases"] = [evaluate_case(c, args.live, api_key, output_dir) for c in cases]
+        report["cases"] = [evaluate_case(c, args.live, api_key, output_dir, replay_cases.get(c["id"])) for c in cases]
     counts = Counter()
     for result in report["cases"]:
         status = result["extraction"]["status"]

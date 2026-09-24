@@ -1,6 +1,7 @@
 {
-  "expectations_version": 1,
+  "expectations_version": 2,
   "authored_before_new_model_calls": true,
+  "check_revision_note": "Natural-language expectations were authored before the live baseline. Version 2 strengthens the broth check after observing its false pass; expected behavior is unchanged.",
   "cases": [
     {
       "id": "cookie_multi_change",
@@ -168,7 +169,10 @@
         {
           "id": "broth_unchanged",
           "target": "ingredients",
-          "exact_line": "3 cups chicken broth, homemade or from a carton or can"
+          "matching_pattern": "\\b(?:broth|stock)\\b",
+          "expected_lines": [
+            "3 cups chicken broth, homemade or from a carton or can"
+          ]
         }
       ]
     },

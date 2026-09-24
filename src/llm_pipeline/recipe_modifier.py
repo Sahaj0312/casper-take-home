@@ -6,7 +6,7 @@ It takes ModificationObject instances and applies their edits to recipe ingredie
 """
 
 import copy
-from difflib import SequenceMatcher
+import re
 from typing import List, Optional, Tuple
 
 from loguru import logger
@@ -23,122 +23,95 @@ class RecipeModifier:
     """Applies structured modifications to recipes using search-and-replace operations."""
 
     def __init__(self, similarity_threshold: float = 0.6):
-        """
-        Initialize the RecipeModifier.
-
-        Args:
-            similarity_threshold: Minimum similarity score for fuzzy matching (0-1)
-        """
+        # Retain the constructor argument for existing callers. Fuzzy matching
+        # is no longer used: a similarity score cannot establish ingredient identity.
         self.similarity_threshold = similarity_threshold
-        logger.info(f"Initialized RecipeModifier with similarity threshold: {similarity_threshold}")
+
+    def _find_unique_span(self, target: str, candidates: List[str]) -> Optional[Tuple[int, int, int]]:
+        """Return (line index, start, end) for one case-insensitive literal span.
+
+        Count occurrences across all lines, including overlapping occurrences.
+        Empty, absent, and ambiguous anchors are rejected rather than guessed.
+        """
+        if not target.strip():
+            return None
+        pattern = re.compile(re.escape(target), re.IGNORECASE)
+        found = None
+        for index, line in enumerate(candidates):
+            offset = 0
+            while match := pattern.search(line, offset):
+                if found is not None:
+                    return None
+                found = (index, match.start(), match.end())
+                offset = match.start() + 1
+        return found
 
     def find_best_match(self, target: str, candidates: List[str]) -> Tuple[Optional[str], Optional[int], float]:
-        """
-        Find the best matching string in a list of candidates.
-
-        Args:
-            target: String to find
-            candidates: List of strings to search in
-
-        Returns:
-            Tuple of (best_match, index, similarity_score)
-        """
-        if not candidates:
+        """Compatibility wrapper: unique literal match scores 1, rejection 0."""
+        match = self._find_unique_span(target, candidates)
+        if match is None:
             return None, None, 0.0
+        index, _, _ = match
+        return candidates[index], index, 1.0
 
-        best_match = None
-        best_index = None
-        best_score = 0.0
-
-        for i, candidate in enumerate(candidates):
-            similarity = SequenceMatcher(None, target.lower(), candidate.lower()).ratio()
-            if similarity > best_score:
-                best_score = similarity
-                best_match = candidate
-                best_index = i
-
-        if best_score >= self.similarity_threshold:
-            return best_match, best_index, best_score
-        else:
-            return None, None, best_score
+    def _resolve_edit(
+        self, edit: ModificationEdit, content: List[str]
+    ) -> Tuple[Optional[Tuple[int, int, int]], Optional[str]]:
+        """Resolve and validate an edit against the content at this step."""
+        match = self._find_unique_span(edit.find, content)
+        if match is None:
+            return None, "target is empty, missing, or ambiguous"
+        index, start, end = match
+        if edit.operation == "replace":
+            if not edit.replace or not edit.replace.strip():
+                return None, "replacement text is missing; use remove to delete a line"
+            new_text = content[index][:start] + edit.replace + content[index][end:]
+            if new_text == content[index]:
+                return None, "replacement would not change content"
+        elif edit.operation == "add_after":
+            if not edit.add or not edit.add.strip():
+                return None, "addition text is missing"
+        elif edit.operation == "remove":
+            if start != 0 or end != len(content[index]):
+                return None, "removal requires a whole-line target"
+        return match, None
 
     def apply_edit(
         self,
         edit: ModificationEdit,
         recipe_content: List[str]
     ) -> Tuple[List[str], List[ChangeRecord]]:
+        """Apply one uniquely anchored edit; reject without mutation or records.
+
+        Replacement uses the resolved span, so case variants and short literal
+        instruction snippets behave consistently. Removal always deletes a whole
+        line and therefore requires a whole-line anchor. Rejected edits are
+        logged; the existing (content, records) return contract is preserved.
         """
-        Apply a single edit to a recipe content list.
+        modified_content = list(recipe_content)
+        match, reason = self._resolve_edit(edit, modified_content)
+        if match is None:
+            logger.warning(f"Rejected {edit.operation} in {edit.target}: {reason}: {edit.find!r}")
+            return modified_content, []
 
-        Args:
-            edit: The edit operation to apply
-            recipe_content: List of ingredients or instructions
-
-        Returns:
-            Tuple of (modified_content, change_records)
-        """
-        modified_content = copy.deepcopy(recipe_content)
-        change_records = []
-
-        logger.debug(f"Applying {edit.operation} edit: find='{edit.find}'")
-
+        index, start, end = match
+        original_text = modified_content[index]
         if edit.operation == "replace":
-            # Find and replace text
-            match, index, score = self.find_best_match(edit.find, modified_content)
-
-            if match and index is not None:
-                original_text = modified_content[index]
-                new_text = original_text.replace(edit.find, edit.replace or "")
-                modified_content[index] = new_text
-
-                change_records.append(ChangeRecord(
-                    type="ingredient" if edit.target == "ingredients" else "instruction",
-                    from_text=original_text,
-                    to_text=new_text,
-                    operation="replace"
-                ))
-
-                logger.info(f"Replaced '{edit.find}' with '{edit.replace}' (similarity: {score:.2f})")
-            else:
-                logger.warning(f"Could not find '{edit.find}' in {edit.target} (best similarity: {score:.2f})")
-
+            new_text = original_text[:start] + edit.replace + original_text[end:]
+            modified_content[index] = new_text
+            from_text, to_text, operation = original_text, new_text, "replace"
         elif edit.operation == "add_after":
-            # Add new content after finding target
-            match, index, score = self.find_best_match(edit.find, modified_content)
+            modified_content.insert(index + 1, edit.add)
+            from_text, to_text, operation = "", edit.add, "add"
+        else:  # remove; _resolve_edit has required a whole-line match
+            modified_content.pop(index)
+            from_text, to_text, operation = original_text, "", "remove"
 
-            if match and index is not None and edit.add:
-                modified_content.insert(index + 1, edit.add)
-
-                change_records.append(ChangeRecord(
-                    type="ingredient" if edit.target == "ingredients" else "instruction",
-                    from_text="",
-                    to_text=edit.add,
-                    operation="add"
-                ))
-
-                logger.info(f"Added '{edit.add}' after '{edit.find}' (similarity: {score:.2f})")
-            else:
-                logger.warning(f"Could not find target '{edit.find}' for addition")
-
-        elif edit.operation == "remove":
-            # Remove matching content
-            match, index, score = self.find_best_match(edit.find, modified_content)
-
-            if match and index is not None:
-                removed_text = modified_content.pop(index)
-
-                change_records.append(ChangeRecord(
-                    type="ingredient" if edit.target == "ingredients" else "instruction",
-                    from_text=removed_text,
-                    to_text="",
-                    operation="remove"
-                ))
-
-                logger.info(f"Removed '{edit.find}' (similarity: {score:.2f})")
-            else:
-                logger.warning(f"Could not find '{edit.find}' to remove")
-
-        return modified_content, change_records
+        record = ChangeRecord(
+            type="ingredient" if edit.target == "ingredients" else "instruction",
+            from_text=from_text, to_text=to_text, operation=operation,
+        )
+        return modified_content, [record]
 
     def apply_modification(
         self,
@@ -186,7 +159,7 @@ class RecipeModifier:
 
             all_change_records.extend(change_records)
 
-        logger.info(f"Applied modification successfully: {len(all_change_records)} changes made")
+        logger.info(f"Finished modification: {len(all_change_records)} actual changes from {len(modification.edits)} proposed edits")
         return modified_recipe, all_change_records
 
     def apply_modifications_batch(
@@ -215,7 +188,7 @@ class RecipeModifier:
             current_recipe, change_records = self.apply_modification(current_recipe, modification)
             all_change_records.append(change_records)
 
-        logger.info(f"Applied all modifications. Final recipe has {len(current_recipe.ingredients)} ingredients and {len(current_recipe.instructions)} instructions")
+        logger.info(f"Finished batch. Final recipe has {len(current_recipe.ingredients)} ingredients and {len(current_recipe.instructions)} instructions")
         return current_recipe, all_change_records
 
     def validate_modification_safety(
@@ -224,7 +197,7 @@ class RecipeModifier:
         recipe: Recipe
     ) -> Tuple[bool, List[str]]:
         """
-        Validate that a modification won't break the recipe.
+        Validate edit targets and payloads in sequence, without mutating the recipe.
 
         Args:
             modification: Modification to validate
@@ -234,25 +207,14 @@ class RecipeModifier:
             Tuple of (is_safe, list_of_warnings)
         """
         warnings = []
-        is_safe = True
-
+        current = {
+            "ingredients": list(recipe.ingredients),
+            "instructions": list(recipe.instructions),
+        }
         for edit in modification.edits:
-            # Check if target content exists
-            target_content = recipe.ingredients if edit.target == "ingredients" else recipe.instructions
-            match, _, score = self.find_best_match(edit.find, target_content)
-
-            if not match:
-                warnings.append(f"Cannot find '{edit.find}' in {edit.target}")
-                is_safe = False
-            elif score < 0.8:
-                warnings.append(f"Low similarity match for '{edit.find}' (score: {score:.2f})")
-
-            # Check for required fields
-            if edit.operation == "replace" and not edit.replace:
-                warnings.append(f"Replace operation missing replacement text for '{edit.find}'")
-                is_safe = False
-            elif edit.operation == "add_after" and not edit.add:
-                warnings.append(f"Add operation missing text to add after '{edit.find}'")
-                is_safe = False
-
-        return is_safe, warnings
+            _, reason = self._resolve_edit(edit, current[edit.target])
+            if reason:
+                warnings.append(f"Cannot apply {edit.operation} for {edit.find!r}: {reason}")
+                continue
+            current[edit.target], _ = self.apply_edit(edit, current[edit.target])
+        return not warnings, warnings
