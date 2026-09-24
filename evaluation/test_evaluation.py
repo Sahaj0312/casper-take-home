@@ -53,6 +53,21 @@ class EvaluationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             load_case(bad_case)
 
+    def test_inline_extraction_requires_explicit_opt_in(self):
+        case = {"id": "inline", "recipe": {"recipe_id": "inline", "title": "Test",
+                "ingredients": ["1 cup oats"], "instructions": ["Toast oats."]},
+                "review_text": "I used two cups oats.", "expected_behavior": [], "checks": []}
+        with TemporaryDirectory() as directory, patch(
+            "llm_pipeline.tweak_extractor.TweakExtractor.extract_modification", return_value=None,
+        ) as extract:
+            result = evaluate_case(case, True, "offline-test-key", directory)
+            self.assertEqual(result["extraction"]["status"], "not_applicable")
+            extract.assert_not_called()
+            result = evaluate_case(dict(case, evaluate_extraction=True), True, "offline-test-key", directory)
+            extract.assert_called_once()
+            self.assertEqual(extract.call_args.args[0].text, case["review_text"])
+            self.assertEqual(result["extraction"]["status"], "failed")
+
     def test_incomplete_extraction_is_separate_from_correct_application(self):
         # Fake model output is only a harness test, never baseline evidence.
         proposal = {

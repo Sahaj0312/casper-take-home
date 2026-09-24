@@ -1,0 +1,194 @@
+{
+  "review_method": "Manual inspection of original text, raw attempts, final analysis, proposal, actual recipe, and ledger. Verdicts refer to the frozen pre-run expectations; no pipeline or prompt tuning.",
+  "fixture_sha256": "385b0e5c1900e6aa5987cbb9310451dbd1eb866009d855ed082f9a04b155ac18",
+  "live_sha256": "da64e505ece8bb02a137c319326fb9944c2cf1ddf194006d1df092a63a6e9e4d",
+  "summary": {
+    "cases": 5,
+    "pass_count": 3,
+    "partial_count": 1,
+    "fail_count": 1,
+    "model_calls": 16,
+    "validation_retries": 6,
+    "usage": {
+      "prompt_tokens": 12152,
+      "completion_tokens": 2165
+    }
+  },
+  "cases": [
+    {
+      "id": "apple_frosting_future",
+      "manual_verdict": "pass",
+      "observed": "Two decisions retained: unspecified tried frosting needs clarification; extra apples remain future-only. Entire recipe unchanged.",
+      "remaining_issues": "Inventory needed two retries: amount normalization rejected one more cup -> 1 cup, then clause coverage rejected a valid quote with trailing punctuation.",
+      "calls": 3,
+      "validation_retries": 2,
+      "final_status": "needs_clarification",
+      "reported_edits": 0,
+      "application_audit": "passed",
+      "all_packaging_checks": true,
+      "actual_content": {
+        "ingredients": [
+          "1.5 cups all-purpose flour",
+          "1 teaspoon ground cinnamon",
+          "1 teaspoon baking powder",
+          "0.5 teaspoon baking soda",
+          "0.5 teaspoon salt",
+          "0.5 teaspoon ground nutmeg",
+          "1 cup brown sugar",
+          "0.5 cup shortening",
+          "0.25 cup white sugar",
+          "2 eggs",
+          "1 teaspoon vanilla extract",
+          "0.5 cup milk",
+          "2 cups apple - peeled, cored, and chopped",
+          "2 cups sifted confectioners' sugar",
+          "0.25 cup shortening",
+          "0.25 teaspoon ground cinnamon",
+          "1 pinch ground nutmeg",
+          "0.25 cup evaporated milk"
+        ],
+        "instructions": [
+          "Preheat the oven to 350 degrees F (175 degrees C). Grease and flour a 9-inch square pan.",
+          "Sift together flour, 1 teaspoon cinnamon, baking powder, baking soda, salt, and nutmeg. Set aside.",
+          "Cream brown sugar, 1/2 cup shortening, and white sugar together in a large bowl until light and fluffy. Beat in eggs one at a time, then stir in vanilla. Beat in flour mixture alternately with milk, mixing until just combined. Stir in chopped apples.",
+          "Spread batter evenly in the prepared pan. Bake in the preheated oven until a toothpick inserted into the center of cake comes out clean, 35 to 40 minutes. Let cool.",
+          "Combine confectioners&#39; sugar, 1/4 cup shortening, 1/4 teaspoon cinnamon, and nutmeg in a medium bowl. Beat until frosting is light and creamy. Beat in evaporated milk 1 tablespoon at a time until desired spreading consistency is reached. Spread over top of cooled cake."
+        ]
+      },
+      "expected_behavior": [
+        "Recognize the different frosting as actually used, but unspecified: ask which frosting/ingredients/amounts; do not invent a frosting recipe.",
+        "Adding one more cup of apples is a future plan, not a tested change. Keep the original 2 cups apples.",
+        "Return the original recipe with zero edits and a needs_clarification status. Preserve both the tried frosting change and the future apple idea in the analysis.",
+        "Do not invent benefits or assert that more apples improves the recipe."
+      ]
+    },
+    {
+      "id": "nikujaga_approximate_conditional",
+      "manual_verdict": "partial",
+      "observed": "Three tried changes retained, approximate beef qualifier preserved in analysis, soy/sugar quantities deferred; actual recipe unchanged with original dashi.",
+      "remaining_issues": "Conditional broth advice is summarized as Used beef broth although review says dashi was obtained. Validator also rejects equivalent approximate amount wording, then mistakes an approximate quantity for ingredient identity, then fails the beef/sirloin alias. Three planner attempts exhaust and all edits are withheld.",
+      "calls": 4,
+      "validation_retries": 2,
+      "final_status": "needs_clarification",
+      "reported_edits": 0,
+      "application_audit": "passed",
+      "all_packaging_checks": true,
+      "actual_content": {
+        "ingredients": [
+          "8 snow peas",
+          "1 tablespoon vegetable oil",
+          "0.25 pound sirloin steak, thinly sliced",
+          "4 potatoes, cut into bite sized pieces",
+          "2 cups dashi soup",
+          "0.25 cup soy sauce",
+          "0.25 cup sake",
+          "1 tablespoon white sugar",
+          "1 onion, chopped"
+        ],
+        "instructions": [
+          "Put the snow peas in a small saucepan with enough water to cover; bring to a boil and immediately remove from heat. Drain and set aside.",
+          "Heat the oil in a large skillet over medium heat; cook the beef in the oil until browned. Add the potatoes; cook and stir until soft, 5 to 7 minutes. Stir the dashi soup, soy sauce, sake, and sugar into the mixture; simmer for 10 minutes.",
+          "Reduce heat to low and scatter the chopped onion over the mixture; allow to simmer until the liquid is nearly completely evaporated, about 15 minutes more. Top the mixture with the snow peas to serve."
+        ]
+      },
+      "expected_behavior": [
+        "Retain three tried changes separately: a little over 1 lb beef, extra soy sauce, and extra sugar.",
+        "Beef amount is approximate: preserve the qualifier if applied, or explicitly defer it. Do not silently convert to exactly 1 lb or a guessed precise amount.",
+        "Extra soy and sugar have no measured amounts: ask about each, and do not guess quantities.",
+        "The beef-stock suggestion is conditional advice, not evidence of a tried substitution: the reviewer says they obtained dashi from their mother. Keep the original dashi and do not add beef broth.",
+        "An unchanged needs_clarification recipe is acceptable if all three tried changes and the untested advice are retained. If only approximate beef is safely applied, label the unresolved remainder and keep ingredient/direction references consistent.",
+        "No unrelated modifications or invented benefits."
+      ]
+    },
+    {
+      "id": "porridge_substitution_timing",
+      "manual_verdict": "pass",
+      "observed": "Two supported changes become three real edits: 1 cup dairy milk -> 1 cup oat milk in ingredient/direction; simmer 10 -> 8 minutes. Honey, oats, stirring and serving unchanged. No benefit invented.",
+      "remaining_issues": "None observed in this run.",
+      "calls": 3,
+      "validation_retries": 0,
+      "final_status": "enhanced",
+      "reported_edits": 3,
+      "application_audit": "passed",
+      "all_packaging_checks": true,
+      "actual_content": {
+        "ingredients": [
+          "1 cup oat milk",
+          "0.5 cup rolled oats",
+          "1 tablespoon honey"
+        ],
+        "instructions": [
+          "Combine oat milk and rolled oats in a saucepan.",
+          "Simmer for 8 minutes, stirring often.",
+          "Stir in honey and serve."
+        ]
+      },
+      "expected_behavior": [
+        "Apply exactly two changes: 1 cup oat milk replaces 1 cup dairy milk, and simmer for 8 minutes instead of 10.",
+        "Update the milk ingredient and its use in the first instruction; remove all dairy-milk references.",
+        "Keep oats, honey, stirring, and serving unchanged. Keeping honey is not an additional modification.",
+        "No claimed flavor/health/texture benefit: the review states none."
+      ]
+    },
+    {
+      "id": "oil_quantity_and_negation",
+      "manual_verdict": "fail",
+      "observed": "Oil reduction and future garlic intent extracted, but a spurious butter-removal action blocks the plan. Final oil remains 2 tablespoons in both places; zero edits.",
+      "remaining_issues": "Extraction treats I did not add butter as an actionable removal even though butter was never present. The valid two-edit oil plan is discarded when the nonexistent removal cannot produce changes. This is not a literal-editor matching failure.",
+      "calls": 5,
+      "validation_retries": 2,
+      "final_status": "needs_clarification",
+      "reported_edits": 0,
+      "application_audit": "passed",
+      "all_packaging_checks": true,
+      "actual_content": {
+        "ingredients": [
+          "2 tablespoons olive oil",
+          "2 cups sliced zucchini",
+          "0.25 teaspoon salt"
+        ],
+        "instructions": [
+          "Heat 2 tablespoons olive oil in a skillet.",
+          "Add zucchini and saute for 5 minutes.",
+          "Add salt and serve."
+        ]
+      },
+      "expected_behavior": [
+        "Apply only the olive-oil reduction: 2 tablespoons to 1 tablespoon in both the ingredient and the heating instruction.",
+        "Do not add butter or list it as a tried addition: the statement explicitly negates it.",
+        "Garlic is an untried future idea; keep it in the analysis but do not apply it or invent an amount.",
+        "Keep zucchini, salt, cooking time and other actions unchanged. No invented benefits."
+      ]
+    },
+    {
+      "id": "ambiguous_sugar_identity",
+      "manual_verdict": "pass",
+      "observed": "Asks whether 1/2 cup refers to white sugar, brown sugar, or both. No guessed target; all content unchanged.",
+      "remaining_issues": "None observed in this run.",
+      "calls": 1,
+      "validation_retries": 0,
+      "final_status": "needs_clarification",
+      "reported_edits": 0,
+      "application_audit": "passed",
+      "all_packaging_checks": true,
+      "actual_content": {
+        "ingredients": [
+          "1 cup white sugar",
+          "1 cup brown sugar",
+          "2 cups oats",
+          "0.5 cup butter"
+        ],
+        "instructions": [
+          "Combine white sugar and brown sugar with oats.",
+          "Rub in butter, then bake at 180 C for 20 minutes."
+        ]
+      },
+      "expected_behavior": [
+        "The recipe has two distinct sugars and the review does not identify which was reduced or whether 1/2 cup was the combined total.",
+        "Retain the quantity proposal as needs_clarification and ask which sugar/total. Do not guess white or brown sugar.",
+        "Keep all ingredients and instructions unchanged, with zero applied/reported edits.",
+        "The only outcome evidence is the reviewer saying it worked well; do not invent a specific texture/health explanation."
+      ]
+    }
+  ]
+}

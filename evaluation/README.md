@@ -266,3 +266,7 @@ GPT-6 Luna live outputs, manual review, costs, limitations, and rerun commands
 are in [extraction_findings.md](extraction_findings.md). The new comparison is
 [extraction_comparison.json](extraction_comparison.json); the original baselines
 remain unchanged.
+
+The next bounded evaluation of five new cases is documented in
+[heldout_findings.md](heldout_findings.md): three passes, one partial result, and
+one failure, with expectations frozen before the calls and no pipeline tuning.

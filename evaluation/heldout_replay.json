@@ -1,0 +1,1318 @@
+{
+  "created_at": "2026-09-24T21:52:09.956230+00:00",
+  "git_head": "6c5622587ec1eb9f6ae27762807946c3d376828f",
+  "python": "3.13.5 (main, Jun 11 2025, 15:36:57) [Clang 17.0.0 (clang-1700.0.13.3)]",
+  "dependencies": {
+    "openai": "1.109.1",
+    "pydantic": "2.11.9",
+    "loguru": "0.7.3"
+  },
+  "source_sha256": {
+    "data/recipe_144299_nikujaga-japanese-style-meat-and-potatoes-.json": "e5f078525a68db24e5f3379e0675fe18a6db13b7638896fce1b8abc6a570873e",
+    "data/recipe_19117_spicy-apple-cake.json": "5e09079ba7736cde8b5d6dbad832b15c076efe09fb84cbec97906b42dcbeb899",
+    "evaluation/heldout_cases.json": "385b0e5c1900e6aa5987cbb9310451dbd1eb866009d855ed082f9a04b155ac18",
+    "evaluation/run.py": "3e88d71e7bcd3ac200274751cd357ea4773c86d13bce4ed2c9a692b532af5d3a",
+    "src/llm_pipeline/__init__.py": "435f8ff84d19a192d71a3fa354c1c18b236dc017f37f35136ca9cec7a9bb6b85",
+    "src/llm_pipeline/enhanced_recipe_generator.py": "68063772578418ff357379f15f82078b4b35b938c26bcf8b365ea62add14df0f",
+    "src/llm_pipeline/grounding.py": "80337802496ef80cc088f3bbe5b3ec85f75600860b539cac7093fe6577856e23",
+    "src/llm_pipeline/models.py": "cf51be09d815f7b486358c5577c522201b552c734f0d398f5f383208f6a61f6b",
+    "src/llm_pipeline/pipeline.py": "991394462d02652cb5783596fdb5f9ab3864756fffd2fe5b4f98e20597ae26f3",
+    "src/llm_pipeline/prompts.py": "f95e765d10441b8acd26ce48e0aa85b2f1cb0f940d72059fa106f9ecc5aaaa47",
+    "src/llm_pipeline/recipe_modifier.py": "b234834410ba0cf366feb2a0b2795455356cc96f14c3b5f8205b6507c6e405ff",
+    "src/llm_pipeline/tweak_extractor.py": "c5db942823903305267d26b409419def9b893fe155fabe5b71776a63a4415163"
+  },
+  "expectations_version": 1,
+  "live_requested": false,
+  "selection": "exact review text; only that review supplied to unmodified orchestrator",
+  "limitations": "Fixed selection is reproducible; live model responses are not guaranteed deterministic. Regex checks are screening aids; semantic review is required. Oracle edits are not extractor output.",
+  "replay_source": {
+    "path": "evaluation/heldout_live.json",
+    "sha256": "da64e505ece8bb02a137c319326fb9944c2cf1ddf194006d1df092a63a6e9e4d"
+  },
+  "cases": [
+    {
+      "id": "apple_frosting_future",
+      "review_text": "Mmmm, this cake was so good. I made it exactly as directed except I used a different frosting only because I had some leftover from another cake. The next time I make this I will add one more cup of apples because more is better right?!",
+      "original_content": {
+        "ingredients": [
+          "1.5 cups all-purpose flour",
+          "1 teaspoon ground cinnamon",
+          "1 teaspoon baking powder",
+          "0.5 teaspoon baking soda",
+          "0.5 teaspoon salt",
+          "0.5 teaspoon ground nutmeg",
+          "1 cup brown sugar",
+          "0.5 cup shortening",
+          "0.25 cup white sugar",
+          "2 eggs",
+          "1 teaspoon vanilla extract",
+          "0.5 cup milk",
+          "2 cups apple - peeled, cored, and chopped",
+          "2 cups sifted confectioners' sugar",
+          "0.25 cup shortening",
+          "0.25 teaspoon ground cinnamon",
+          "1 pinch ground nutmeg",
+          "0.25 cup evaporated milk"
+        ],
+        "instructions": [
+          "Preheat the oven to 350 degrees F (175 degrees C). Grease and flour a 9-inch square pan.",
+          "Sift together flour, 1 teaspoon cinnamon, baking powder, baking soda, salt, and nutmeg. Set aside.",
+          "Cream brown sugar, 1/2 cup shortening, and white sugar together in a large bowl until light and fluffy. Beat in eggs one at a time, then stir in vanilla. Beat in flour mixture alternately with milk, mixing until just combined. Stir in chopped apples.",
+          "Spread batter evenly in the prepared pan. Bake in the preheated oven until a toothpick inserted into the center of cake comes out clean, 35 to 40 minutes. Let cool.",
+          "Combine confectioners&#39; sugar, 1/4 cup shortening, 1/4 teaspoon cinnamon, and nutmeg in a medium bowl. Beat until frosting is light and creamy. Beat in evaporated milk 1 tablespoon at a time until desired spreading consistency is reached. Spread over top of cooled cake."
+        ]
+      },
+      "expected_behavior": [
+        "Recognize the different frosting as actually used, but unspecified: ask which frosting/ingredients/amounts; do not invent a frosting recipe.",
+        "Adding one more cup of apples is a future plan, not a tested change. Keep the original 2 cups apples.",
+        "Return the original recipe with zero edits and a needs_clarification status. Preserve both the tried frosting change and the future apple idea in the analysis.",
+        "Do not invent benefits or assert that more apples improves the recipe."
+      ],
+      "extraction": {
+        "status": "replayed",
+        "attempts": [],
+        "proposal": {
+          "modification_type": "ingredient_substitution",
+          "reasoning": "No actionable edits; see the review analysis for deferred changes.",
+          "edits": [],
+          "analysis": {
+            "changes": [
+              {
+                "id": "c1",
+                "modification_type": "ingredient_substitution",
+                "summary": "Used a different frosting.",
+                "evidence": "I used a different frosting",
+                "disposition": "needs_clarification",
+                "clarification": "What frosting did you use, and how much?"
+              },
+              {
+                "id": "c2",
+                "modification_type": "addition",
+                "summary": "Plans to add apples.",
+                "evidence": "The next time I make this I will add one more cup of apples",
+                "disposition": "future_plan",
+                "amount": "one more cup of apples",
+                "amount_evidence": "one more cup of apples"
+              }
+            ],
+            "outcome_evidence": "Mmmm, this cake was so good."
+          },
+          "edit_sources": []
+        },
+        "semantic_review": "pending: compare each expected behavior with proposal; check wording, order, omissions, unsupported edits and quantity assumptions",
+        "content_screening": {
+          "status": "passed",
+          "checks": [],
+          "note": "Heuristic screening only; complete the semantic review separately."
+        }
+      },
+      "actual_application": {
+        "status": "passed",
+        "failures": [],
+        "transitions": [],
+        "actual_content": {
+          "ingredients": [
+            "1.5 cups all-purpose flour",
+            "1 teaspoon ground cinnamon",
+            "1 teaspoon baking powder",
+            "0.5 teaspoon baking soda",
+            "0.5 teaspoon salt",
+            "0.5 teaspoon ground nutmeg",
+            "1 cup brown sugar",
+            "0.5 cup shortening",
+            "0.25 cup white sugar",
+            "2 eggs",
+            "1 teaspoon vanilla extract",
+            "0.5 cup milk",
+            "2 cups apple - peeled, cored, and chopped",
+            "2 cups sifted confectioners' sugar",
+            "0.25 cup shortening",
+            "0.25 teaspoon ground cinnamon",
+            "1 pinch ground nutmeg",
+            "0.25 cup evaporated milk"
+          ],
+          "instructions": [
+            "Preheat the oven to 350 degrees F (175 degrees C). Grease and flour a 9-inch square pan.",
+            "Sift together flour, 1 teaspoon cinnamon, baking powder, baking soda, salt, and nutmeg. Set aside.",
+            "Cream brown sugar, 1/2 cup shortening, and white sugar together in a large bowl until light and fluffy. Beat in eggs one at a time, then stir in vanilla. Beat in flour mixture alternately with milk, mixing until just combined. Stir in chopped apples.",
+            "Spread batter evenly in the prepared pan. Bake in the preheated oven until a toothpick inserted into the center of cake comes out clean, 35 to 40 minutes. Let cool.",
+            "Combine confectioners&#39; sugar, 1/4 cup shortening, 1/4 teaspoon cinnamon, and nutmeg in a medium bowl. Beat until frosting is light and creamy. Beat in evaporated milk 1 tablespoon at a time until desired spreading consistency is reached. Spread over top of cooled cake."
+          ]
+        },
+        "actual_diff": {
+          "ingredients": [],
+          "instructions": []
+        },
+        "reported_changes": [],
+        "proposal_projection": {
+          "content": {
+            "ingredients": [
+              "1.5 cups all-purpose flour",
+              "1 teaspoon ground cinnamon",
+              "1 teaspoon baking powder",
+              "0.5 teaspoon baking soda",
+              "0.5 teaspoon salt",
+              "0.5 teaspoon ground nutmeg",
+              "1 cup brown sugar",
+              "0.5 cup shortening",
+              "0.25 cup white sugar",
+              "2 eggs",
+              "1 teaspoon vanilla extract",
+              "0.5 cup milk",
+              "2 cups apple - peeled, cored, and chopped",
+              "2 cups sifted confectioners' sugar",
+              "0.25 cup shortening",
+              "0.25 teaspoon ground cinnamon",
+              "1 pinch ground nutmeg",
+              "0.25 cup evaporated milk"
+            ],
+            "instructions": [
+              "Preheat the oven to 350 degrees F (175 degrees C). Grease and flour a 9-inch square pan.",
+              "Sift together flour, 1 teaspoon cinnamon, baking powder, baking soda, salt, and nutmeg. Set aside.",
+              "Cream brown sugar, 1/2 cup shortening, and white sugar together in a large bowl until light and fluffy. Beat in eggs one at a time, then stir in vanilla. Beat in flour mixture alternately with milk, mixing until just combined. Stir in chopped apples.",
+              "Spread batter evenly in the prepared pan. Bake in the preheated oven until a toothpick inserted into the center of cake comes out clean, 35 to 40 minutes. Let cool.",
+              "Combine confectioners&#39; sugar, 1/4 cup shortening, 1/4 teaspoon cinnamon, and nutmeg in a medium bowl. Beat until frosting is light and creamy. Beat in evaporated milk 1 tablespoon at a time until desired spreading consistency is reached. Spread over top of cooled cake."
+            ]
+          },
+          "issues": [],
+          "checks": []
+        },
+        "final_content_checks": []
+      },
+      "enhanced_recipe": {
+        "recipe_id": "19117_enhanced",
+        "original_recipe_id": "19117",
+        "title": "Spicy Apple Cake (Needs Clarification)",
+        "ingredients": [
+          "1.5 cups all-purpose flour",
+          "1 teaspoon ground cinnamon",
+          "1 teaspoon baking powder",
+          "0.5 teaspoon baking soda",
+          "0.5 teaspoon salt",
+          "0.5 teaspoon ground nutmeg",
+          "1 cup brown sugar",
+          "0.5 cup shortening",
+          "0.25 cup white sugar",
+          "2 eggs",
+          "1 teaspoon vanilla extract",
+          "0.5 cup milk",
+          "2 cups apple - peeled, cored, and chopped",
+          "2 cups sifted confectioners' sugar",
+          "0.25 cup shortening",
+          "0.25 teaspoon ground cinnamon",
+          "1 pinch ground nutmeg",
+          "0.25 cup evaporated milk"
+        ],
+        "instructions": [
+          "Preheat the oven to 350 degrees F (175 degrees C). Grease and flour a 9-inch square pan.",
+          "Sift together flour, 1 teaspoon cinnamon, baking powder, baking soda, salt, and nutmeg. Set aside.",
+          "Cream brown sugar, 1/2 cup shortening, and white sugar together in a large bowl until light and fluffy. Beat in eggs one at a time, then stir in vanilla. Beat in flour mixture alternately with milk, mixing until just combined. Stir in chopped apples.",
+          "Spread batter evenly in the prepared pan. Bake in the preheated oven until a toothpick inserted into the center of cake comes out clean, 35 to 40 minutes. Let cool.",
+          "Combine confectioners&#39; sugar, 1/4 cup shortening, 1/4 teaspoon cinnamon, and nutmeg in a medium bowl. Beat until frosting is light and creamy. Beat in evaporated milk 1 tablespoon at a time until desired spreading consistency is reached. Spread over top of cooled cake."
+        ],
+        "modifications_applied": [],
+        "enhancement_summary": {
+          "total_changes": 0,
+          "change_types": [],
+          "expected_impact": "No benefit established by this pipeline."
+        },
+        "review_analysis": {
+          "changes": [
+            {
+              "id": "c1",
+              "modification_type": "ingredient_substitution",
+              "summary": "Used a different frosting.",
+              "evidence": "I used a different frosting",
+              "disposition": "needs_clarification",
+              "amount": null,
+              "amount_evidence": null,
+              "clarification": "What frosting did you use, and how much?"
+            },
+            {
+              "id": "c2",
+              "modification_type": "addition",
+              "summary": "Plans to add apples.",
+              "evidence": "The next time I make this I will add one more cup of apples",
+              "disposition": "future_plan",
+              "amount": "one more cup of apples",
+              "amount_evidence": "one more cup of apples",
+              "clarification": null
+            }
+          ],
+          "outcome_evidence": "Mmmm, this cake was so good."
+        },
+        "edit_sources": [],
+        "enhancement_status": "needs_clarification",
+        "description": "This delicious spicy apple cake recipe is made with fresh apples, spices, and sugar. It&#39;s a wonderfully perfect treat for the apple harvest season.",
+        "servings": "9",
+        "prep_time": null,
+        "cook_time": null,
+        "total_time": null,
+        "created_at": "2026-09-24T17:52:10.127642",
+        "pipeline_version": "1.0.0"
+      },
+      "packaging_checks": {
+        "ledger_preserved": true,
+        "content_preserved": true,
+        "count_matches_records": true,
+        "source_matches": true
+      },
+      "replay_comparison": {
+        "proposal_unchanged": true,
+        "content_matches_saved_run": true,
+        "llm_calls": 0
+      }
+    },
+    {
+      "id": "nikujaga_approximate_conditional",
+      "review_text": "Overall it was pretty good but the measurements were way off. HAS to be a typo. 1/4lb of meat to serve 4??? I used a lil over 1lb and it even then it was swimming in the broth. After following the recipe, i added extra soy and sugar only because i thought the flavor was a little on the lite side. Overall good.** If you cant find dashi, beef broth/stock works just fine. My japanese mom happen to have some so i was able to get some from her.",
+      "original_content": {
+        "ingredients": [
+          "8 snow peas",
+          "1 tablespoon vegetable oil",
+          "0.25 pound sirloin steak, thinly sliced",
+          "4 potatoes, cut into bite sized pieces",
+          "2 cups dashi soup",
+          "0.25 cup soy sauce",
+          "0.25 cup sake",
+          "1 tablespoon white sugar",
+          "1 onion, chopped"
+        ],
+        "instructions": [
+          "Put the snow peas in a small saucepan with enough water to cover; bring to a boil and immediately remove from heat. Drain and set aside.",
+          "Heat the oil in a large skillet over medium heat; cook the beef in the oil until browned. Add the potatoes; cook and stir until soft, 5 to 7 minutes. Stir the dashi soup, soy sauce, sake, and sugar into the mixture; simmer for 10 minutes.",
+          "Reduce heat to low and scatter the chopped onion over the mixture; allow to simmer until the liquid is nearly completely evaporated, about 15 minutes more. Top the mixture with the snow peas to serve."
+        ]
+      },
+      "expected_behavior": [
+        "Retain three tried changes separately: a little over 1 lb beef, extra soy sauce, and extra sugar.",
+        "Beef amount is approximate: preserve the qualifier if applied, or explicitly defer it. Do not silently convert to exactly 1 lb or a guessed precise amount.",
+        "Extra soy and sugar have no measured amounts: ask about each, and do not guess quantities.",
+        "The beef-stock suggestion is conditional advice, not evidence of a tried substitution: the reviewer says they obtained dashi from their mother. Keep the original dashi and do not add beef broth.",
+        "An unchanged needs_clarification recipe is acceptable if all three tried changes and the untested advice are retained. If only approximate beef is safely applied, label the unresolved remainder and keep ingredient/direction references consistent.",
+        "No unrelated modifications or invented benefits."
+      ],
+      "extraction": {
+        "status": "replayed",
+        "attempts": [],
+        "proposal": {
+          "modification_type": "quantity_adjustment",
+          "reasoning": "No actionable edits; see the review analysis for deferred changes.",
+          "edits": [],
+          "analysis": {
+            "changes": [
+              {
+                "id": "c1",
+                "modification_type": "quantity_adjustment",
+                "summary": "Increased the meat to a little over 1 pound.",
+                "evidence": "I used a lil over 1lb",
+                "disposition": "needs_clarification",
+                "amount": "a lil over 1lb",
+                "amount_evidence": "I used a lil over 1lb",
+                "clarification": "Could not construct a complete, grounded and consistently applicable edit plan; review this change manually."
+              },
+              {
+                "id": "c2",
+                "modification_type": "addition",
+                "summary": "Added extra soy sauce.",
+                "evidence": "i added extra soy",
+                "disposition": "needs_clarification",
+                "clarification": "How much extra soy sauce did you add?"
+              },
+              {
+                "id": "c3",
+                "modification_type": "addition",
+                "summary": "Added extra sugar.",
+                "evidence": "and sugar",
+                "disposition": "needs_clarification",
+                "clarification": "How much extra sugar did you add?"
+              },
+              {
+                "id": "c4",
+                "modification_type": "ingredient_substitution",
+                "summary": "Used beef broth or stock instead of dashi when dashi is unavailable.",
+                "evidence": "If you cant find dashi, beef broth/stock works just fine.",
+                "disposition": "needs_clarification",
+                "clarification": "Did you use beef broth or stock instead of dashi, and which one?"
+              }
+            ],
+            "outcome_evidence": "it even then it was swimming in the broth"
+          },
+          "edit_sources": []
+        },
+        "semantic_review": "pending: compare each expected behavior with proposal; check wording, order, omissions, unsupported edits and quantity assumptions",
+        "content_screening": {
+          "status": "passed",
+          "checks": [],
+          "note": "Heuristic screening only; complete the semantic review separately."
+        }
+      },
+      "actual_application": {
+        "status": "passed",
+        "failures": [],
+        "transitions": [],
+        "actual_content": {
+          "ingredients": [
+            "8 snow peas",
+            "1 tablespoon vegetable oil",
+            "0.25 pound sirloin steak, thinly sliced",
+            "4 potatoes, cut into bite sized pieces",
+            "2 cups dashi soup",
+            "0.25 cup soy sauce",
+            "0.25 cup sake",
+            "1 tablespoon white sugar",
+            "1 onion, chopped"
+          ],
+          "instructions": [
+            "Put the snow peas in a small saucepan with enough water to cover; bring to a boil and immediately remove from heat. Drain and set aside.",
+            "Heat the oil in a large skillet over medium heat; cook the beef in the oil until browned. Add the potatoes; cook and stir until soft, 5 to 7 minutes. Stir the dashi soup, soy sauce, sake, and sugar into the mixture; simmer for 10 minutes.",
+            "Reduce heat to low and scatter the chopped onion over the mixture; allow to simmer until the liquid is nearly completely evaporated, about 15 minutes more. Top the mixture with the snow peas to serve."
+          ]
+        },
+        "actual_diff": {
+          "ingredients": [],
+          "instructions": []
+        },
+        "reported_changes": [],
+        "proposal_projection": {
+          "content": {
+            "ingredients": [
+              "8 snow peas",
+              "1 tablespoon vegetable oil",
+              "0.25 pound sirloin steak, thinly sliced",
+              "4 potatoes, cut into bite sized pieces",
+              "2 cups dashi soup",
+              "0.25 cup soy sauce",
+              "0.25 cup sake",
+              "1 tablespoon white sugar",
+              "1 onion, chopped"
+            ],
+            "instructions": [
+              "Put the snow peas in a small saucepan with enough water to cover; bring to a boil and immediately remove from heat. Drain and set aside.",
+              "Heat the oil in a large skillet over medium heat; cook the beef in the oil until browned. Add the potatoes; cook and stir until soft, 5 to 7 minutes. Stir the dashi soup, soy sauce, sake, and sugar into the mixture; simmer for 10 minutes.",
+              "Reduce heat to low and scatter the chopped onion over the mixture; allow to simmer until the liquid is nearly completely evaporated, about 15 minutes more. Top the mixture with the snow peas to serve."
+            ]
+          },
+          "issues": [],
+          "checks": []
+        },
+        "final_content_checks": []
+      },
+      "enhanced_recipe": {
+        "recipe_id": "144299_enhanced",
+        "original_recipe_id": "144299",
+        "title": "Nikujaga (Japanese-Style Meat and Potatoes) (Needs Clarification)",
+        "ingredients": [
+          "8 snow peas",
+          "1 tablespoon vegetable oil",
+          "0.25 pound sirloin steak, thinly sliced",
+          "4 potatoes, cut into bite sized pieces",
+          "2 cups dashi soup",
+          "0.25 cup soy sauce",
+          "0.25 cup sake",
+          "1 tablespoon white sugar",
+          "1 onion, chopped"
+        ],
+        "instructions": [
+          "Put the snow peas in a small saucepan with enough water to cover; bring to a boil and immediately remove from heat. Drain and set aside.",
+          "Heat the oil in a large skillet over medium heat; cook the beef in the oil until browned. Add the potatoes; cook and stir until soft, 5 to 7 minutes. Stir the dashi soup, soy sauce, sake, and sugar into the mixture; simmer for 10 minutes.",
+          "Reduce heat to low and scatter the chopped onion over the mixture; allow to simmer until the liquid is nearly completely evaporated, about 15 minutes more. Top the mixture with the snow peas to serve."
+        ],
+        "modifications_applied": [],
+        "enhancement_summary": {
+          "total_changes": 0,
+          "change_types": [],
+          "expected_impact": "No benefit established by this pipeline."
+        },
+        "review_analysis": {
+          "changes": [
+            {
+              "id": "c1",
+              "modification_type": "quantity_adjustment",
+              "summary": "Increased the meat to a little over 1 pound.",
+              "evidence": "I used a lil over 1lb",
+              "disposition": "needs_clarification",
+              "amount": "a lil over 1lb",
+              "amount_evidence": "I used a lil over 1lb",
+              "clarification": "Could not construct a complete, grounded and consistently applicable edit plan; review this change manually."
+            },
+            {
+              "id": "c2",
+              "modification_type": "addition",
+              "summary": "Added extra soy sauce.",
+              "evidence": "i added extra soy",
+              "disposition": "needs_clarification",
+              "amount": null,
+              "amount_evidence": null,
+              "clarification": "How much extra soy sauce did you add?"
+            },
+            {
+              "id": "c3",
+              "modification_type": "addition",
+              "summary": "Added extra sugar.",
+              "evidence": "and sugar",
+              "disposition": "needs_clarification",
+              "amount": null,
+              "amount_evidence": null,
+              "clarification": "How much extra sugar did you add?"
+            },
+            {
+              "id": "c4",
+              "modification_type": "ingredient_substitution",
+              "summary": "Used beef broth or stock instead of dashi when dashi is unavailable.",
+              "evidence": "If you cant find dashi, beef broth/stock works just fine.",
+              "disposition": "needs_clarification",
+              "amount": null,
+              "amount_evidence": null,
+              "clarification": "Did you use beef broth or stock instead of dashi, and which one?"
+            }
+          ],
+          "outcome_evidence": "it even then it was swimming in the broth"
+        },
+        "edit_sources": [],
+        "enhancement_status": "needs_clarification",
+        "description": "This main dish recipe features sliced beef sirloin cooked with potatoes, and onion in a sauce made with prepared dashi soup, sake, and soy sauce.",
+        "servings": "4",
+        "prep_time": null,
+        "cook_time": null,
+        "total_time": null,
+        "created_at": "2026-09-24T17:52:10.133577",
+        "pipeline_version": "1.0.0"
+      },
+      "packaging_checks": {
+        "ledger_preserved": true,
+        "content_preserved": true,
+        "count_matches_records": true,
+        "source_matches": true
+      },
+      "replay_comparison": {
+        "proposal_unchanged": true,
+        "content_matches_saved_run": true,
+        "llm_calls": 0
+      }
+    },
+    {
+      "id": "porridge_substitution_timing",
+      "review_text": "I used 1 cup oat milk instead of dairy milk and simmered for 8 minutes instead of 10. I kept the honey exactly as written.",
+      "original_content": {
+        "ingredients": [
+          "1 cup dairy milk",
+          "0.5 cup rolled oats",
+          "1 tablespoon honey"
+        ],
+        "instructions": [
+          "Combine dairy milk and rolled oats in a saucepan.",
+          "Simmer for 10 minutes, stirring often.",
+          "Stir in honey and serve."
+        ]
+      },
+      "expected_behavior": [
+        "Apply exactly two changes: 1 cup oat milk replaces 1 cup dairy milk, and simmer for 8 minutes instead of 10.",
+        "Update the milk ingredient and its use in the first instruction; remove all dairy-milk references.",
+        "Keep oats, honey, stirring, and serving unchanged. Keeping honey is not an additional modification.",
+        "No claimed flavor/health/texture benefit: the review states none."
+      ],
+      "extraction": {
+        "status": "replayed",
+        "attempts": [],
+        "proposal": {
+          "modification_type": "ingredient_substitution",
+          "reasoning": "Reviewer evidence: I used 1 cup oat milk instead of dairy milk; simmered for 8 minutes instead of 10",
+          "edits": [
+            {
+              "target": "ingredients",
+              "operation": "replace",
+              "find": "1 cup dairy milk",
+              "replace": "1 cup oat milk"
+            },
+            {
+              "target": "instructions",
+              "operation": "replace",
+              "find": "Combine dairy milk and rolled oats in a saucepan.",
+              "replace": "Combine oat milk and rolled oats in a saucepan."
+            },
+            {
+              "target": "instructions",
+              "operation": "replace",
+              "find": "Simmer for 10 minutes, stirring often.",
+              "replace": "Simmer for 8 minutes, stirring often."
+            }
+          ],
+          "analysis": {
+            "changes": [
+              {
+                "id": "c1",
+                "modification_type": "ingredient_substitution",
+                "summary": "Replace dairy milk with oat milk",
+                "evidence": "I used 1 cup oat milk instead of dairy milk",
+                "disposition": "apply",
+                "amount": "1 cup",
+                "amount_evidence": "1 cup oat milk"
+              },
+              {
+                "id": "c2",
+                "modification_type": "technique_change",
+                "summary": "Simmer for 8 minutes instead of 10",
+                "evidence": "simmered for 8 minutes instead of 10",
+                "disposition": "apply",
+                "amount": "8 minutes",
+                "amount_evidence": "8 minutes"
+              }
+            ]
+          },
+          "edit_sources": [
+            [
+              "c1"
+            ],
+            [
+              "c1"
+            ],
+            [
+              "c2"
+            ]
+          ]
+        },
+        "semantic_review": "pending: compare each expected behavior with proposal; check wording, order, omissions, unsupported edits and quantity assumptions",
+        "content_screening": {
+          "status": "passed",
+          "checks": [
+            {
+              "id": "oat_milk_ingredient",
+              "passed": true
+            },
+            {
+              "id": "oat_milk_used",
+              "passed": true
+            },
+            {
+              "id": "no_dairy_directions",
+              "passed": true
+            },
+            {
+              "id": "eight_minutes",
+              "passed": true
+            },
+            {
+              "id": "no_ten_minutes",
+              "passed": true
+            }
+          ],
+          "note": "Heuristic screening only; complete the semantic review separately."
+        }
+      },
+      "actual_application": {
+        "status": "passed",
+        "failures": [],
+        "transitions": [
+          {
+            "edit": {
+              "target": "ingredients",
+              "operation": "replace",
+              "find": "1 cup dairy milk",
+              "replace": "1 cup oat milk"
+            },
+            "before": [
+              "1 cup dairy milk",
+              "0.5 cup rolled oats",
+              "1 tablespoon honey"
+            ],
+            "after": [
+              "1 cup oat milk",
+              "0.5 cup rolled oats",
+              "1 tablespoon honey"
+            ],
+            "records": [
+              {
+                "type": "ingredient",
+                "from_text": "1 cup dairy milk",
+                "to_text": "1 cup oat milk",
+                "operation": "replace"
+              }
+            ],
+            "content_changed": true,
+            "literal_contract_passed": true,
+            "unresolved_anchor_or_payload": null,
+            "ledger": {
+              "passed": true,
+              "issues": []
+            }
+          },
+          {
+            "edit": {
+              "target": "instructions",
+              "operation": "replace",
+              "find": "Combine dairy milk and rolled oats in a saucepan.",
+              "replace": "Combine oat milk and rolled oats in a saucepan."
+            },
+            "before": [
+              "Combine dairy milk and rolled oats in a saucepan.",
+              "Simmer for 10 minutes, stirring often.",
+              "Stir in honey and serve."
+            ],
+            "after": [
+              "Combine oat milk and rolled oats in a saucepan.",
+              "Simmer for 10 minutes, stirring often.",
+              "Stir in honey and serve."
+            ],
+            "records": [
+              {
+                "type": "instruction",
+                "from_text": "Combine dairy milk and rolled oats in a saucepan.",
+                "to_text": "Combine oat milk and rolled oats in a saucepan.",
+                "operation": "replace"
+              }
+            ],
+            "content_changed": true,
+            "literal_contract_passed": true,
+            "unresolved_anchor_or_payload": null,
+            "ledger": {
+              "passed": true,
+              "issues": []
+            }
+          },
+          {
+            "edit": {
+              "target": "instructions",
+              "operation": "replace",
+              "find": "Simmer for 10 minutes, stirring often.",
+              "replace": "Simmer for 8 minutes, stirring often."
+            },
+            "before": [
+              "Combine oat milk and rolled oats in a saucepan.",
+              "Simmer for 10 minutes, stirring often.",
+              "Stir in honey and serve."
+            ],
+            "after": [
+              "Combine oat milk and rolled oats in a saucepan.",
+              "Simmer for 8 minutes, stirring often.",
+              "Stir in honey and serve."
+            ],
+            "records": [
+              {
+                "type": "instruction",
+                "from_text": "Simmer for 10 minutes, stirring often.",
+                "to_text": "Simmer for 8 minutes, stirring often.",
+                "operation": "replace"
+              }
+            ],
+            "content_changed": true,
+            "literal_contract_passed": true,
+            "unresolved_anchor_or_payload": null,
+            "ledger": {
+              "passed": true,
+              "issues": []
+            }
+          }
+        ],
+        "actual_content": {
+          "ingredients": [
+            "1 cup oat milk",
+            "0.5 cup rolled oats",
+            "1 tablespoon honey"
+          ],
+          "instructions": [
+            "Combine oat milk and rolled oats in a saucepan.",
+            "Simmer for 8 minutes, stirring often.",
+            "Stir in honey and serve."
+          ]
+        },
+        "actual_diff": {
+          "ingredients": [
+            "--- original/ingredients",
+            "+++ actual/ingredients",
+            "@@ -1,3 +1,3 @@",
+            "-1 cup dairy milk",
+            "+1 cup oat milk",
+            " 0.5 cup rolled oats",
+            " 1 tablespoon honey"
+          ],
+          "instructions": [
+            "--- original/instructions",
+            "+++ actual/instructions",
+            "@@ -1,3 +1,3 @@",
+            "-Combine dairy milk and rolled oats in a saucepan.",
+            "-Simmer for 10 minutes, stirring often.",
+            "+Combine oat milk and rolled oats in a saucepan.",
+            "+Simmer for 8 minutes, stirring often.",
+            " Stir in honey and serve."
+          ]
+        },
+        "reported_changes": [
+          {
+            "type": "ingredient",
+            "from_text": "1 cup dairy milk",
+            "to_text": "1 cup oat milk",
+            "operation": "replace"
+          },
+          {
+            "type": "instruction",
+            "from_text": "Combine dairy milk and rolled oats in a saucepan.",
+            "to_text": "Combine oat milk and rolled oats in a saucepan.",
+            "operation": "replace"
+          },
+          {
+            "type": "instruction",
+            "from_text": "Simmer for 10 minutes, stirring often.",
+            "to_text": "Simmer for 8 minutes, stirring often.",
+            "operation": "replace"
+          }
+        ],
+        "proposal_projection": {
+          "content": {
+            "ingredients": [
+              "1 cup oat milk",
+              "0.5 cup rolled oats",
+              "1 tablespoon honey"
+            ],
+            "instructions": [
+              "Combine oat milk and rolled oats in a saucepan.",
+              "Simmer for 8 minutes, stirring often.",
+              "Stir in honey and serve."
+            ]
+          },
+          "issues": [],
+          "checks": [
+            {
+              "id": "oat_milk_ingredient",
+              "passed": true
+            },
+            {
+              "id": "oat_milk_used",
+              "passed": true
+            },
+            {
+              "id": "no_dairy_directions",
+              "passed": true
+            },
+            {
+              "id": "eight_minutes",
+              "passed": true
+            },
+            {
+              "id": "no_ten_minutes",
+              "passed": true
+            }
+          ]
+        },
+        "final_content_checks": [
+          {
+            "id": "oat_milk_ingredient",
+            "passed": true
+          },
+          {
+            "id": "oat_milk_used",
+            "passed": true
+          },
+          {
+            "id": "no_dairy_directions",
+            "passed": true
+          },
+          {
+            "id": "eight_minutes",
+            "passed": true
+          },
+          {
+            "id": "no_ten_minutes",
+            "passed": true
+          }
+        ]
+      },
+      "enhanced_recipe": {
+        "recipe_id": "porridge_substitution_timing_enhanced",
+        "original_recipe_id": "porridge_substitution_timing",
+        "title": "Simple dairy porridge (Community Enhanced)",
+        "ingredients": [
+          "1 cup oat milk",
+          "0.5 cup rolled oats",
+          "1 tablespoon honey"
+        ],
+        "instructions": [
+          "Combine oat milk and rolled oats in a saucepan.",
+          "Simmer for 8 minutes, stirring often.",
+          "Stir in honey and serve."
+        ],
+        "modifications_applied": [
+          {
+            "source_review": {
+              "text": "I used 1 cup oat milk instead of dairy milk and simmered for 8 minutes instead of 10. I kept the honey exactly as written.",
+              "reviewer": null,
+              "rating": null
+            },
+            "modification_type": "ingredient_substitution",
+            "reasoning": "Reviewer evidence: I used 1 cup oat milk instead of dairy milk; simmered for 8 minutes instead of 10",
+            "changes_made": [
+              {
+                "type": "ingredient",
+                "from_text": "1 cup dairy milk",
+                "to_text": "1 cup oat milk",
+                "operation": "replace"
+              },
+              {
+                "type": "instruction",
+                "from_text": "Combine dairy milk and rolled oats in a saucepan.",
+                "to_text": "Combine oat milk and rolled oats in a saucepan.",
+                "operation": "replace"
+              },
+              {
+                "type": "instruction",
+                "from_text": "Simmer for 10 minutes, stirring often.",
+                "to_text": "Simmer for 8 minutes, stirring often.",
+                "operation": "replace"
+              }
+            ]
+          }
+        ],
+        "enhancement_summary": {
+          "total_changes": 3,
+          "change_types": [
+            "ingredient_substitution",
+            "technique_change"
+          ],
+          "expected_impact": "No benefit established by this pipeline."
+        },
+        "review_analysis": {
+          "changes": [
+            {
+              "id": "c1",
+              "modification_type": "ingredient_substitution",
+              "summary": "Replace dairy milk with oat milk",
+              "evidence": "I used 1 cup oat milk instead of dairy milk",
+              "disposition": "apply",
+              "amount": "1 cup",
+              "amount_evidence": "1 cup oat milk",
+              "clarification": null
+            },
+            {
+              "id": "c2",
+              "modification_type": "technique_change",
+              "summary": "Simmer for 8 minutes instead of 10",
+              "evidence": "simmered for 8 minutes instead of 10",
+              "disposition": "apply",
+              "amount": "8 minutes",
+              "amount_evidence": "8 minutes",
+              "clarification": null
+            }
+          ],
+          "outcome_evidence": null
+        },
+        "edit_sources": [
+          [
+            "c1"
+          ],
+          [
+            "c1"
+          ],
+          [
+            "c2"
+          ]
+        ],
+        "enhancement_status": "enhanced",
+        "description": null,
+        "servings": null,
+        "prep_time": null,
+        "cook_time": null,
+        "total_time": null,
+        "created_at": "2026-09-24T17:52:10.139079",
+        "pipeline_version": "1.0.0"
+      },
+      "packaging_checks": {
+        "ledger_preserved": true,
+        "content_preserved": true,
+        "count_matches_records": true,
+        "source_matches": true
+      },
+      "replay_comparison": {
+        "proposal_unchanged": true,
+        "content_matches_saved_run": true,
+        "llm_calls": 0
+      }
+    },
+    {
+      "id": "oil_quantity_and_negation",
+      "review_text": "I used 1 tablespoon olive oil, not 2. I did not add butter. Next time I might add garlic.",
+      "original_content": {
+        "ingredients": [
+          "2 tablespoons olive oil",
+          "2 cups sliced zucchini",
+          "0.25 teaspoon salt"
+        ],
+        "instructions": [
+          "Heat 2 tablespoons olive oil in a skillet.",
+          "Add zucchini and saute for 5 minutes.",
+          "Add salt and serve."
+        ]
+      },
+      "expected_behavior": [
+        "Apply only the olive-oil reduction: 2 tablespoons to 1 tablespoon in both the ingredient and the heating instruction.",
+        "Do not add butter or list it as a tried addition: the statement explicitly negates it.",
+        "Garlic is an untried future idea; keep it in the analysis but do not apply it or invent an amount.",
+        "Keep zucchini, salt, cooking time and other actions unchanged. No invented benefits."
+      ],
+      "extraction": {
+        "status": "replayed",
+        "attempts": [],
+        "proposal": {
+          "modification_type": "quantity_adjustment",
+          "reasoning": "No actionable edits; see the review analysis for deferred changes.",
+          "edits": [],
+          "analysis": {
+            "changes": [
+              {
+                "id": "c1",
+                "modification_type": "quantity_adjustment",
+                "summary": "Use 1 tablespoon olive oil instead of 2 tablespoons.",
+                "evidence": "I used 1 tablespoon olive oil, not 2.",
+                "disposition": "needs_clarification",
+                "amount": "1 tablespoon",
+                "amount_evidence": "I used 1 tablespoon olive oil, not 2.",
+                "clarification": "Could not construct a complete, grounded and consistently applicable edit plan; review this change manually."
+              },
+              {
+                "id": "c2",
+                "modification_type": "removal",
+                "summary": "Do not add butter.",
+                "evidence": "I did not add butter.",
+                "disposition": "needs_clarification",
+                "clarification": "Could not construct a complete, grounded and consistently applicable edit plan; review this change manually."
+              },
+              {
+                "id": "c3",
+                "modification_type": "addition",
+                "summary": "Add garlic.",
+                "evidence": "Next time I might add garlic.",
+                "disposition": "future_plan"
+              }
+            ]
+          },
+          "edit_sources": []
+        },
+        "semantic_review": "pending: compare each expected behavior with proposal; check wording, order, omissions, unsupported edits and quantity assumptions",
+        "content_screening": {
+          "status": "failed",
+          "checks": [
+            {
+              "id": "one_tablespoon_ingredient",
+              "passed": false
+            },
+            {
+              "id": "one_tablespoon_directions",
+              "passed": false
+            },
+            {
+              "id": "no_old_oil_amount",
+              "passed": false
+            },
+            {
+              "id": "no_untried_ingredients",
+              "passed": true
+            }
+          ],
+          "note": "Heuristic screening only; complete the semantic review separately."
+        }
+      },
+      "actual_application": {
+        "status": "passed",
+        "failures": [],
+        "transitions": [],
+        "actual_content": {
+          "ingredients": [
+            "2 tablespoons olive oil",
+            "2 cups sliced zucchini",
+            "0.25 teaspoon salt"
+          ],
+          "instructions": [
+            "Heat 2 tablespoons olive oil in a skillet.",
+            "Add zucchini and saute for 5 minutes.",
+            "Add salt and serve."
+          ]
+        },
+        "actual_diff": {
+          "ingredients": [],
+          "instructions": []
+        },
+        "reported_changes": [],
+        "proposal_projection": {
+          "content": {
+            "ingredients": [
+              "2 tablespoons olive oil",
+              "2 cups sliced zucchini",
+              "0.25 teaspoon salt"
+            ],
+            "instructions": [
+              "Heat 2 tablespoons olive oil in a skillet.",
+              "Add zucchini and saute for 5 minutes.",
+              "Add salt and serve."
+            ]
+          },
+          "issues": [],
+          "checks": [
+            {
+              "id": "one_tablespoon_ingredient",
+              "passed": false
+            },
+            {
+              "id": "one_tablespoon_directions",
+              "passed": false
+            },
+            {
+              "id": "no_old_oil_amount",
+              "passed": false
+            },
+            {
+              "id": "no_untried_ingredients",
+              "passed": true
+            }
+          ]
+        },
+        "final_content_checks": [
+          {
+            "id": "one_tablespoon_ingredient",
+            "passed": false
+          },
+          {
+            "id": "one_tablespoon_directions",
+            "passed": false
+          },
+          {
+            "id": "no_old_oil_amount",
+            "passed": false
+          },
+          {
+            "id": "no_untried_ingredients",
+            "passed": true
+          }
+        ]
+      },
+      "enhanced_recipe": {
+        "recipe_id": "oil_quantity_and_negation_enhanced",
+        "original_recipe_id": "oil_quantity_and_negation",
+        "title": "Sauteed zucchini (Needs Clarification)",
+        "ingredients": [
+          "2 tablespoons olive oil",
+          "2 cups sliced zucchini",
+          "0.25 teaspoon salt"
+        ],
+        "instructions": [
+          "Heat 2 tablespoons olive oil in a skillet.",
+          "Add zucchini and saute for 5 minutes.",
+          "Add salt and serve."
+        ],
+        "modifications_applied": [],
+        "enhancement_summary": {
+          "total_changes": 0,
+          "change_types": [],
+          "expected_impact": "No benefit established by this pipeline."
+        },
+        "review_analysis": {
+          "changes": [
+            {
+              "id": "c1",
+              "modification_type": "quantity_adjustment",
+              "summary": "Use 1 tablespoon olive oil instead of 2 tablespoons.",
+              "evidence": "I used 1 tablespoon olive oil, not 2.",
+              "disposition": "needs_clarification",
+              "amount": "1 tablespoon",
+              "amount_evidence": "I used 1 tablespoon olive oil, not 2.",
+              "clarification": "Could not construct a complete, grounded and consistently applicable edit plan; review this change manually."
+            },
+            {
+              "id": "c2",
+              "modification_type": "removal",
+              "summary": "Do not add butter.",
+              "evidence": "I did not add butter.",
+              "disposition": "needs_clarification",
+              "amount": null,
+              "amount_evidence": null,
+              "clarification": "Could not construct a complete, grounded and consistently applicable edit plan; review this change manually."
+            },
+            {
+              "id": "c3",
+              "modification_type": "addition",
+              "summary": "Add garlic.",
+              "evidence": "Next time I might add garlic.",
+              "disposition": "future_plan",
+              "amount": null,
+              "amount_evidence": null,
+              "clarification": null
+            }
+          ],
+          "outcome_evidence": null
+        },
+        "edit_sources": [],
+        "enhancement_status": "needs_clarification",
+        "description": null,
+        "servings": null,
+        "prep_time": null,
+        "cook_time": null,
+        "total_time": null,
+        "created_at": "2026-09-24T17:52:10.147111",
+        "pipeline_version": "1.0.0"
+      },
+      "packaging_checks": {
+        "ledger_preserved": true,
+        "content_preserved": true,
+        "count_matches_records": true,
+        "source_matches": true
+      },
+      "replay_comparison": {
+        "proposal_unchanged": true,
+        "content_matches_saved_run": true,
+        "llm_calls": 0
+      }
+    },
+    {
+      "id": "ambiguous_sugar_identity",
+      "review_text": "I used 1/2 cup sugar and it worked well.",
+      "original_content": {
+        "ingredients": [
+          "1 cup white sugar",
+          "1 cup brown sugar",
+          "2 cups oats",
+          "0.5 cup butter"
+        ],
+        "instructions": [
+          "Combine white sugar and brown sugar with oats.",
+          "Rub in butter, then bake at 180 C for 20 minutes."
+        ]
+      },
+      "expected_behavior": [
+        "The recipe has two distinct sugars and the review does not identify which was reduced or whether 1/2 cup was the combined total.",
+        "Retain the quantity proposal as needs_clarification and ask which sugar/total. Do not guess white or brown sugar.",
+        "Keep all ingredients and instructions unchanged, with zero applied/reported edits.",
+        "The only outcome evidence is the reviewer saying it worked well; do not invent a specific texture/health explanation."
+      ],
+      "extraction": {
+        "status": "replayed",
+        "attempts": [],
+        "proposal": {
+          "modification_type": "quantity_adjustment",
+          "reasoning": "No actionable edits; see the review analysis for deferred changes.",
+          "edits": [],
+          "analysis": {
+            "changes": [
+              {
+                "id": "c1",
+                "modification_type": "quantity_adjustment",
+                "summary": "Used 1/2 cup sugar.",
+                "evidence": "I used 1/2 cup sugar",
+                "disposition": "needs_clarification",
+                "amount": "1/2 cup",
+                "amount_evidence": "1/2 cup",
+                "clarification": "Which sugar did you use 1/2 cup of: white sugar, brown sugar, or both?"
+              }
+            ],
+            "outcome_evidence": "it worked well"
+          },
+          "edit_sources": []
+        },
+        "semantic_review": "pending: compare each expected behavior with proposal; check wording, order, omissions, unsupported edits and quantity assumptions",
+        "content_screening": {
+          "status": "passed",
+          "checks": [],
+          "note": "Heuristic screening only; complete the semantic review separately."
+        }
+      },
+      "actual_application": {
+        "status": "passed",
+        "failures": [],
+        "transitions": [],
+        "actual_content": {
+          "ingredients": [
+            "1 cup white sugar",
+            "1 cup brown sugar",
+            "2 cups oats",
+            "0.5 cup butter"
+          ],
+          "instructions": [
+            "Combine white sugar and brown sugar with oats.",
+            "Rub in butter, then bake at 180 C for 20 minutes."
+          ]
+        },
+        "actual_diff": {
+          "ingredients": [],
+          "instructions": []
+        },
+        "reported_changes": [],
+        "proposal_projection": {
+          "content": {
+            "ingredients": [
+              "1 cup white sugar",
+              "1 cup brown sugar",
+              "2 cups oats",
+              "0.5 cup butter"
+            ],
+            "instructions": [
+              "Combine white sugar and brown sugar with oats.",
+              "Rub in butter, then bake at 180 C for 20 minutes."
+            ]
+          },
+          "issues": [],
+          "checks": []
+        },
+        "final_content_checks": []
+      },
+      "enhanced_recipe": {
+        "recipe_id": "ambiguous_sugar_identity_enhanced",
+        "original_recipe_id": "ambiguous_sugar_identity",
+        "title": "Two-sugar crumble (Needs Clarification)",
+        "ingredients": [
+          "1 cup white sugar",
+          "1 cup brown sugar",
+          "2 cups oats",
+          "0.5 cup butter"
+        ],
+        "instructions": [
+          "Combine white sugar and brown sugar with oats.",
+          "Rub in butter, then bake at 180 C for 20 minutes."
+        ],
+        "modifications_applied": [],
+        "enhancement_summary": {
+          "total_changes": 0,
+          "change_types": [],
+          "expected_impact": "No benefit established by this pipeline."
+        },
+        "review_analysis": {
+          "changes": [
+            {
+              "id": "c1",
+              "modification_type": "quantity_adjustment",
+              "summary": "Used 1/2 cup sugar.",
+              "evidence": "I used 1/2 cup sugar",
+              "disposition": "needs_clarification",
+              "amount": "1/2 cup",
+              "amount_evidence": "1/2 cup",
+              "clarification": "Which sugar did you use 1/2 cup of: white sugar, brown sugar, or both?"
+            }
+          ],
+          "outcome_evidence": "it worked well"
+        },
+        "edit_sources": [],
+        "enhancement_status": "needs_clarification",
+        "description": null,
+        "servings": null,
+        "prep_time": null,
+        "cook_time": null,
+        "total_time": null,
+        "created_at": "2026-09-24T17:52:10.152133",
+        "pipeline_version": "1.0.0"
+      },
+      "packaging_checks": {
+        "ledger_preserved": true,
+        "content_preserved": true,
+        "count_matches_records": true,
+        "source_matches": true
+      },
+      "replay_comparison": {
+        "proposal_unchanged": true,
+        "content_matches_saved_run": true,
+        "llm_calls": 0
+      }
+    }
+  ],
+  "summary": {
+    "extraction_replayed": 5,
+    "semantic_reviews_pending": 5,
+    "actual_application_passed": 5,
+    "extraction_screening_failed": 1
+  }
+}

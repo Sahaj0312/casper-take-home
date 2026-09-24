@@ -231,7 +231,7 @@ def evaluate_case(case, live, api_key, output_dir, replay_case=None):
                                       edits=case["oracle_edits"])
         _, _, application = evaluate_application(pipeline, recipe, proposal, case)
         result["oracle_application"] = application
-    if "recipe_file" not in case:
+    if "recipe_file" not in case and not case.get("evaluate_extraction", False):
         result["extraction"] = {"status": "not_applicable", "reason": "isolated adversarial application case"}
         return result
     if case["review_text"] is not None and replay_case is None and (not live or not api_key):
@@ -330,13 +330,14 @@ def main():
     mode.add_argument("--live", action="store_true", help="call the unchanged extractor for pinned real reviews")
     mode.add_argument("--replay", type=Path, help="replay parsed proposals from a saved live report; never call the model")
     parser.add_argument("--case", action="append", dest="cases", help="case ID; repeat to select several")
+    parser.add_argument("--fixtures", type=Path, default=ROOT / "evaluation/cases.json", help="separate expectation fixtures; original baselines are not modified")
     parser.add_argument("--output", type=Path, default=ROOT / "test_output/evaluation.json")
     args = parser.parse_args()
     load_dotenv(ROOT / ".env")
     load_dotenv(ROOT / "src/.env")
     api_key = os.getenv("OPENAI_API_KEY")
     logger.remove()  # API errors may include secrets; store only exception type/status.
-    fixture_path = ROOT / "evaluation/cases.json"
+    fixture_path = args.fixtures.resolve()
     fixture = json.loads(fixture_path.read_text())
     cases = fixture["cases"]
     if args.cases:
@@ -350,7 +351,7 @@ def main():
         replay_cases = {c["id"]: c for c in saved["cases"]}
         if len(replay_cases) != len(saved["cases"]):
             parser.error("duplicate case IDs in replay report")
-        missing = [c["id"] for c in cases if "recipe_file" in c and c["review_text"] is not None
+        missing = [c["id"] for c in cases if ("recipe_file" in c or c.get("evaluate_extraction")) and c["review_text"] is not None
                    and c["id"] not in replay_cases]
         if missing:
             parser.error(f"replay report lacks proposals for {missing}")

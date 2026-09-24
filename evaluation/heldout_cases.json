@@ -1,0 +1,166 @@
+{
+  "expectations_version": 1,
+  "authored_before_new_model_calls": true,
+  "authored_at": "2026-09-24T21:49:55.300890+00:00",
+  "scope": "Five previously untested cases: two supplied reviews, three synthetic. One live run per case, existing retry bound, no tuning.",
+  "cases": [
+    {
+      "id": "apple_frosting_future",
+      "recipe_file": "data/recipe_19117_spicy-apple-cake.json",
+      "review_text": "Mmmm, this cake was so good. I made it exactly as directed except I used a different frosting only because I had some leftover from another cake. The next time I make this I will add one more cup of apples because more is better right?!",
+      "expected_behavior": [
+        "Recognize the different frosting as actually used, but unspecified: ask which frosting/ingredients/amounts; do not invent a frosting recipe.",
+        "Adding one more cup of apples is a future plan, not a tested change. Keep the original 2 cups apples.",
+        "Return the original recipe with zero edits and a needs_clarification status. Preserve both the tried frosting change and the future apple idea in the analysis.",
+        "Do not invent benefits or assert that more apples improves the recipe."
+      ],
+      "checks": []
+    },
+    {
+      "id": "nikujaga_approximate_conditional",
+      "recipe_file": "data/recipe_144299_nikujaga-japanese-style-meat-and-potatoes-.json",
+      "review_text": "Overall it was pretty good but the measurements were way off. HAS to be a typo. 1/4lb of meat to serve 4??? I used a lil over 1lb and it even then it was swimming in the broth. After following the recipe, i added extra soy and sugar only because i thought the flavor was a little on the lite side. Overall good.** If you cant find dashi, beef broth/stock works just fine. My japanese mom happen to have some so i was able to get some from her.",
+      "expected_behavior": [
+        "Retain three tried changes separately: a little over 1 lb beef, extra soy sauce, and extra sugar.",
+        "Beef amount is approximate: preserve the qualifier if applied, or explicitly defer it. Do not silently convert to exactly 1 lb or a guessed precise amount.",
+        "Extra soy and sugar have no measured amounts: ask about each, and do not guess quantities.",
+        "The beef-stock suggestion is conditional advice, not evidence of a tried substitution: the reviewer says they obtained dashi from their mother. Keep the original dashi and do not add beef broth.",
+        "An unchanged needs_clarification recipe is acceptable if all three tried changes and the untested advice are retained. If only approximate beef is safely applied, label the unresolved remainder and keep ingredient/direction references consistent.",
+        "No unrelated modifications or invented benefits."
+      ],
+      "checks": []
+    },
+    {
+      "id": "porridge_substitution_timing",
+      "evaluate_extraction": true,
+      "provenance": "Synthetic held-out case authored before this run; not a supplied community review.",
+      "recipe": {
+        "recipe_id": "porridge_substitution_timing",
+        "title": "Simple dairy porridge",
+        "ingredients": [
+          "1 cup dairy milk",
+          "0.5 cup rolled oats",
+          "1 tablespoon honey"
+        ],
+        "instructions": [
+          "Combine dairy milk and rolled oats in a saucepan.",
+          "Simmer for 10 minutes, stirring often.",
+          "Stir in honey and serve."
+        ]
+      },
+      "review_text": "I used 1 cup oat milk instead of dairy milk and simmered for 8 minutes instead of 10. I kept the honey exactly as written.",
+      "expected_behavior": [
+        "Apply exactly two changes: 1 cup oat milk replaces 1 cup dairy milk, and simmer for 8 minutes instead of 10.",
+        "Update the milk ingredient and its use in the first instruction; remove all dairy-milk references.",
+        "Keep oats, honey, stirring, and serving unchanged. Keeping honey is not an additional modification.",
+        "No claimed flavor/health/texture benefit: the review states none."
+      ],
+      "checks": [
+        {
+          "id": "oat_milk_ingredient",
+          "target": "ingredients",
+          "exact_line": "1 cup oat milk"
+        },
+        {
+          "id": "oat_milk_used",
+          "target": "instructions",
+          "pattern": "oat milk"
+        },
+        {
+          "id": "no_dairy_directions",
+          "target": "instructions",
+          "pattern": "dairy milk",
+          "absent": true
+        },
+        {
+          "id": "eight_minutes",
+          "target": "instructions",
+          "pattern": "8 minutes"
+        },
+        {
+          "id": "no_ten_minutes",
+          "target": "instructions",
+          "pattern": "10 minutes",
+          "absent": true
+        }
+      ]
+    },
+    {
+      "id": "oil_quantity_and_negation",
+      "evaluate_extraction": true,
+      "provenance": "Synthetic held-out case authored before this run; not a supplied community review.",
+      "recipe": {
+        "recipe_id": "oil_quantity_and_negation",
+        "title": "Sauteed zucchini",
+        "ingredients": [
+          "2 tablespoons olive oil",
+          "2 cups sliced zucchini",
+          "0.25 teaspoon salt"
+        ],
+        "instructions": [
+          "Heat 2 tablespoons olive oil in a skillet.",
+          "Add zucchini and saute for 5 minutes.",
+          "Add salt and serve."
+        ]
+      },
+      "review_text": "I used 1 tablespoon olive oil, not 2. I did not add butter. Next time I might add garlic.",
+      "expected_behavior": [
+        "Apply only the olive-oil reduction: 2 tablespoons to 1 tablespoon in both the ingredient and the heating instruction.",
+        "Do not add butter or list it as a tried addition: the statement explicitly negates it.",
+        "Garlic is an untried future idea; keep it in the analysis but do not apply it or invent an amount.",
+        "Keep zucchini, salt, cooking time and other actions unchanged. No invented benefits."
+      ],
+      "checks": [
+        {
+          "id": "one_tablespoon_ingredient",
+          "target": "ingredients",
+          "exact_line": "1 tablespoon olive oil"
+        },
+        {
+          "id": "one_tablespoon_directions",
+          "target": "instructions",
+          "pattern": "1 tablespoon olive oil"
+        },
+        {
+          "id": "no_old_oil_amount",
+          "target": "instructions",
+          "pattern": "2 tablespoons olive oil",
+          "absent": true
+        },
+        {
+          "id": "no_untried_ingredients",
+          "target": "ingredients",
+          "pattern": "butter|garlic",
+          "absent": true
+        }
+      ]
+    },
+    {
+      "id": "ambiguous_sugar_identity",
+      "evaluate_extraction": true,
+      "provenance": "Synthetic held-out case authored before this run; not a supplied community review.",
+      "recipe": {
+        "recipe_id": "ambiguous_sugar_identity",
+        "title": "Two-sugar crumble",
+        "ingredients": [
+          "1 cup white sugar",
+          "1 cup brown sugar",
+          "2 cups oats",
+          "0.5 cup butter"
+        ],
+        "instructions": [
+          "Combine white sugar and brown sugar with oats.",
+          "Rub in butter, then bake at 180 C for 20 minutes."
+        ]
+      },
+      "review_text": "I used 1/2 cup sugar and it worked well.",
+      "expected_behavior": [
+        "The recipe has two distinct sugars and the review does not identify which was reduced or whether 1/2 cup was the combined total.",
+        "Retain the quantity proposal as needs_clarification and ask which sugar/total. Do not guess white or brown sugar.",
+        "Keep all ingredients and instructions unchanged, with zero applied/reported edits.",
+        "The only outcome evidence is the reviewer saying it worked well; do not invent a specific texture/health explanation."
+      ],
+      "checks": []
+    }
+  ]
+}
