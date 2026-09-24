@@ -207,9 +207,12 @@ def load_case(case):
         if len(matches) != 1:
             raise ValueError(f"{case['id']}: exact pinned review is missing or duplicated")
         raw["reviews"] = matches
+        # Pin both candidate sources; production now prefers Featured Tweaks.
+        raw["featured_tweaks"] = [r for r in raw.get("featured_tweaks", [])
+                                  if r.get("text") == case["review_text"]]
     else:
         raw["reviews"] = [{"text": case["review_text"], "has_modification": True}]
-    # There is exactly one eligible review: random.choice cannot vary selection.
+    # Each candidate source contains only the pinned review text.
     return raw
 
 
@@ -364,7 +367,7 @@ def main():
         "source_sha256": {str(p.relative_to(ROOT)): digest(p) for p in sorted(set(paths))},
         "expectations_version": fixture["expectations_version"],
         "live_requested": args.live,
-        "selection": "exact review text; only that review supplied to unmodified orchestrator",
+        "selection": "exact review text pinned in both candidate sources; production selector tested separately",
         "limitations": "Fixed selection is reproducible; live model responses are not guaranteed deterministic. Regex checks are screening aids; semantic review is required. Oracle edits are not extractor output.",
     }
     if args.replay:

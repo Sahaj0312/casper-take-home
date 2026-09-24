@@ -1,0 +1,62 @@
+{
+  "llm_calls": 0,
+  "note": "Full source arrays; not the pinned extraction fixtures. No supplied candidate has vote_count.",
+  "recipes": [
+    {
+      "recipe_file": "data/recipe_10813_best-chocolate-chip-cookies.json",
+      "selection": {
+        "source": "featured_tweaks",
+        "source_index": 0,
+        "review_text": "I used an ice cream scoop, that made 16 big cookies. I did add an additional egg yolk to help keep the cookie chewy.They turned out fantastic.",
+        "eligible_count": 4,
+        "method": "source_order",
+        "vote_count": null,
+        "reason": "Vote counts are missing or incomplete; using stored source order. Highest-voted status is unknown."
+      }
+    },
+    {
+      "recipe_file": "data/recipe_144299_nikujaga-japanese-style-meat-and-potatoes-.json",
+      "selection": {
+        "source": "featured_tweaks",
+        "source_index": 0,
+        "review_text": "Overall it was pretty good but the measurements were way off. HAS to be a typo. 1/4lb of meat to serve 4??? I used a lil over 1lb and it even then it was swimming in the broth. After following the recipe, i added extra soy and sugar only because i thought the flavor was a little on the lite side. Overall good.** If you cant find dashi, beef broth/stock works just fine. My japanese mom happen to have some so i was able to get some from her.",
+        "eligible_count": 1,
+        "method": "source_order",
+        "vote_count": null,
+        "reason": "Vote counts are missing or incomplete; using stored source order. Highest-voted status is unknown."
+      }
+    },
+    {
+      "recipe_file": "data/recipe_19117_spicy-apple-cake.json",
+      "selection": {
+        "source": "featured_tweaks",
+        "source_index": 0,
+        "review_text": "Mmmm, this cake was so good. I made it exactly as directed except I used a different frosting only because I had some leftover from another cake. The next time I make this I will add one more cup of apples because more is better right?!",
+        "eligible_count": 2,
+        "method": "source_order",
+        "vote_count": null,
+        "reason": "Vote counts are missing or incomplete; using stored source order. Highest-voted status is unknown."
+      }
+    },
+    {
+      "recipe_file": "data/recipe_284494_spiced-purple-plum-jam.json",
+      "selection": null
+    },
+    {
+      "recipe_file": "data/recipe_45613_mango-teriyaki-marinade.json",
+      "selection": null
+    },
+    {
+      "recipe_file": "data/recipe_77935_creamy-sweet-potato-with-ginger-soup.json",
+      "selection": {
+        "source": "featured_tweaks",
+        "source_index": 0,
+        "review_text": "I made this with canned yams. I added roasted Brussels Sprouts and peppers. I drizzled heavy cream at the end. Loved the contrast of the roasted greens to the sweet and spicy. Turned out amazing!",
+        "eligible_count": 5,
+        "method": "source_order",
+        "vote_count": null,
+        "reason": "Vote counts are missing or incomplete; using stored source order. Highest-voted status is unknown."
+      }
+    }
+  ]
+}

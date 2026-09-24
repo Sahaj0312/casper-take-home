@@ -16,6 +16,7 @@ from pydantic import ValidationError
 from .models import ModificationObject, Recipe, RecipeDraft, Review, ReviewAnalysis
 from .grounding import compile_draft, validate_analysis, validate_plan
 from .prompts import INVENTORY_SYSTEM, PLANNING_SYSTEM, inventory_prompt, planning_prompt
+from .review_selector import select_review
 
 
 class TweakExtractor:
@@ -120,7 +121,7 @@ class TweakExtractor:
         self, reviews: list[Review], recipe: Recipe
     ) -> tuple[ModificationObject, Review] | tuple[None, None]:
         """
-        Extract modification from a single randomly selected review.
+        Extract modification from one deterministically selected review.
 
         Args:
             reviews: List of reviews to choose from
@@ -129,18 +130,13 @@ class TweakExtractor:
         Returns:
             Tuple of (ModificationObject, source_Review) if successful, (None, None) otherwise
         """
-        import random
-
-        # Filter to reviews with modifications
-        modification_reviews = [r for r in reviews if r.has_modification]
-
-        if not modification_reviews:
+        selected_review = select_review(reviews)
+        if selected_review is None:
             logger.warning("No reviews with modifications found")
             return None, None
 
-        # Select one random review
-        selected_review = random.choice(modification_reviews)
         logger.info(f"Selected review: {selected_review.text[:100]}...")
+        logger.info(selected_review.selection.reason)
 
         modification = self.extract_modification(selected_review, recipe)
         if modification:

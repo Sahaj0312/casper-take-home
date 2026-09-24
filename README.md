@@ -69,7 +69,14 @@ requiring clarification. Future plans and missing quantities are not applied.
 
 ## How It Works
 
-1. **Extraction**: Select one flagged review (still random) and use **GPT-6 Luna**
+1. **Selection and extraction**: Prefer nonblank entries in `featured_tweaks`.
+   If none exist, fall back to flagged `reviews`. Rank by explicit `vote_count`
+   only when every eligible entry has a valid count; otherwise use stored order.
+   Ties also use stored order. Star ratings never affect selection. Supplied data
+   has no vote counts, so highest-voted status is unknown. The scraper's featured
+   labels are a photo-review heuristic, not verified vote ranking. Output
+   `review_selection` records the source, original index, text, and selection reason.
+   Use **GPT-6 Luna**
    to inventory all its changes in one call. Validate evidence, quantities, and
    tried/future distinctions. API requests use Chat Completions, JSON mode,
    `reasoning_effort="none"`, and a 3,000-token completion limit.

@@ -7,7 +7,7 @@ and all intermediate data formats used throughout the pipeline.
 
 from typing import Any, Dict, List, Literal, Optional
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, StrictInt, model_validator
 
 
 ChangeType = Literal["ingredient_substitution", "quantity_adjustment", "technique_change", "addition", "removal"]
@@ -136,6 +136,16 @@ class EnhancementSummary(BaseModel):
     )
 
 
+class ReviewSelection(BaseModel):
+    source: Literal["featured_tweaks", "reviews"]
+    source_index: int
+    review_text: str
+    eligible_count: int
+    method: Literal["highest_available_vote_count", "source_order"]
+    vote_count: Optional[int] = None
+    reason: str
+
+
 class EnhancedRecipe(BaseModel):
     """Recipe with community modifications applied and full attribution."""
 
@@ -157,6 +167,7 @@ class EnhancedRecipe(BaseModel):
     review_analysis: Optional[ReviewAnalysis] = None
     edit_sources: Optional[List[List[str]]] = None
     enhancement_status: Literal["enhanced", "partial", "needs_clarification", "no_applicable_changes"] = "enhanced"
+    review_selection: Optional[ReviewSelection] = None
 
     # Optional metadata
     description: Optional[str] = Field(description="Enhanced recipe description")
@@ -192,3 +203,7 @@ class Review(BaseModel):
     rating: Optional[int] = None
     username: Optional[str] = None
     has_modification: bool = False
+    source: Literal["featured_tweaks", "reviews"] = "reviews"
+    source_index: int = 0
+    vote_count: Optional[StrictInt] = Field(default=None, ge=0)
+    selection: Optional[ReviewSelection] = None

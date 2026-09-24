@@ -99,15 +99,20 @@ class LLMAnalysisPipeline:
             List of Review objects
         """
         reviews = []
-        raw_reviews = recipe_data.get("reviews", [])
-
-        for review_data in raw_reviews:
-            if review_data.get("text"):
+        for source in ("featured_tweaks", "reviews"):
+            for index, review_data in enumerate(recipe_data.get(source) or []):
+                if not isinstance(review_data, dict) or not isinstance(review_data.get("text"), str) or not review_data["text"].strip():
+                    continue
+                votes = review_data.get("vote_count")
+                # Only the explicit count contract is supported. Do not coerce
+                # star ratings, strings, booleans, or invalid/missing counts.
+                votes = votes if type(votes) is int and votes >= 0 else None
                 review = Review(
                     text=review_data["text"],
                     rating=review_data.get("rating"),
                     username=review_data.get("username"),
-                    has_modification=review_data.get("has_modification", False),
+                    has_modification=(source == "featured_tweaks" or review_data.get("has_modification", False)),
+                    source=source, source_index=index, vote_count=votes,
                 )
                 reviews.append(review)
 
@@ -143,7 +148,7 @@ class LLMAnalysisPipeline:
                 logger.warning("No reviews with modifications found")
                 return None
 
-            # Step 1: Extract modification from one random review
+            # Step 1: Prefer Featured Tweaks using deterministic selection.
             logger.info("Step 1: Extracting modification from a single review...")
             modification, source_review = (
                 self.tweak_extractor.extract_single_modification(reviews, recipe)

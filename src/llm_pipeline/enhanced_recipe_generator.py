@@ -172,6 +172,7 @@ class EnhancedRecipeGenerator:
             review_analysis=modification.analysis,
             edit_sources=modification.edit_sources,
             enhancement_status=status,
+            review_selection=source_review.selection,
             description=original_recipe.description,
             servings=original_recipe.servings,
             prep_time=getattr(original_recipe, "prep_time", None),

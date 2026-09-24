@@ -270,3 +270,37 @@ remain unchanged.
 The next bounded evaluation of five new cases is documented in
 [heldout_findings.md](heldout_findings.md): three passes, one partial result, and
 one failure, with expectations frozen before the calls and no pipeline tuning.
+
+## Deterministic Featured Tweaks selection
+
+Production now prefers nonblank `featured_tweaks` entries, including entries
+without a redundant `has_modification` flag. Only when none exist does it use
+nonblank `reviews` explicitly flagged as modifications. Selection considers one
+source pool at a time. A regular review cannot outrank an eligible featured entry.
+
+An explicit nonnegative integer `vote_count` is the optional vote-data contract.
+If every candidate in that pool has it, select the largest count, with ties in
+stored order. Missing, partial, negative, string, fractional, or boolean counts
+trigger stored-order fallback. Zero is a valid count. Star ratings and aggregate
+recipe rating counts are never treated as votes. No vote scraping was added.
+
+All supplied entries lack vote counts. Their `featured_tweaks` lists were derived
+by the scraper from photo reviews with modification keywords, so their provenance
+does not establish genuine highest-voted status. Every output now records this
+selection decision in `review_selection`, including clarification-only outputs.
+Its index is zero-based in the original selected source array.
+
+`selection_audit.json` records selection from the complete six source recipes:
+first featured entry for cookies, nikujaga, apple cake, and soup; no selection for
+jam or marinade. This changes the default cookie/soup choice from the historical
+pinned evaluation cases; it does not imply new live extraction results for those
+first entries.
+
+All **51** offline tests pass. Tests cover featured-only recipes, preference over
+regular reviews, ratings ignored, ties, complete/missing/partial/invalid counts,
+empty sources, supplied data, and selection provenance on clarification. The
+saved Luna proposals replay exactly in `selection_replay.json` with zero model
+calls. The known soup content-screen exit code remains 1. Extraction fixtures
+pin both source arrays so selection changes cannot silently change their reviews.
+Extraction prompts, grounding rules, editor behavior, and historical reports
+are unchanged by this selection checkpoint.
