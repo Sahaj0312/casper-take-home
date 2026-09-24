@@ -1,0 +1,1416 @@
+{
+  "created_at": "2026-09-24T20:30:38.706990+00:00",
+  "git_head": "ce5a5a02c6eadf5e702b8b3579f3341e47c07b8f",
+  "python": "3.13.5 (main, Jun 11 2025, 15:36:57) [Clang 17.0.0 (clang-1700.0.13.3)]",
+  "dependencies": {
+    "openai": "1.109.1",
+    "pydantic": "2.11.9",
+    "loguru": "0.7.3"
+  },
+  "source_sha256": {
+    "data/recipe_10813_best-chocolate-chip-cookies.json": "11a3e214500b9150326bc65bab9472290cbc49ab6122278fe0ebed08f6fae308",
+    "data/recipe_77935_creamy-sweet-potato-with-ginger-soup.json": "2d9e09396acdd2b6da496c0dd91e3960f1a77aa28d1f8f79f3c9b24f7e101bee",
+    "evaluation/cases.json": "4a4ca175b5b7e7343f2e77ffc685d1594da2d7d39732791256ada3b60f1b254b",
+    "evaluation/run.py": "4fe4663ecc2086e5a61d0431f3c0e125cb50d8e182a2312fd7c40df002a488da",
+    "src/llm_pipeline/__init__.py": "435f8ff84d19a192d71a3fa354c1c18b236dc017f37f35136ca9cec7a9bb6b85",
+    "src/llm_pipeline/enhanced_recipe_generator.py": "6ae25dd15a1fadd99fee33ce96c74dfa369f957c84d73cf91be4dcab1382b416",
+    "src/llm_pipeline/models.py": "9c1737a2d15bc0e8da80ce747dda8796a4c3c7668f54dafef5c887c188840f7a",
+    "src/llm_pipeline/pipeline.py": "991394462d02652cb5783596fdb5f9ab3864756fffd2fe5b4f98e20597ae26f3",
+    "src/llm_pipeline/prompts.py": "8ed7136348b7f6aa421431aa809a662a90387c73a307bb78d06fe2b08a7d5782",
+    "src/llm_pipeline/recipe_modifier.py": "89edb2e242693e77628ad6c1642a6c0c758087cc3d3de950dceb3fbd265a4df2",
+    "src/llm_pipeline/tweak_extractor.py": "f7bc29031e318eb91353fcb2711a545fafd19ae8af37029e67cb6092253ddcd1"
+  },
+  "expectations_version": 1,
+  "live_requested": true,
+  "selection": "exact review text; only that review supplied to unmodified orchestrator",
+  "limitations": "Fixed selection is reproducible; live model responses are not guaranteed deterministic. Regex checks are screening aids; semantic review is required. Oracle edits are not extractor output.",
+  "cases": [
+    {
+      "id": "cookie_multi_change",
+      "review_text": "These are awesome cookies. I followed the advice of others by making the following tweaks: (1) I used a half cup of sugar and one-and-a-half cups of brown sugar; (2) I omitted the water; (3) I added a teaspoon of cream of tartar to the batter; (4) I refrigerated the batter for at least an hour before scooping and baking. The cookies retained their shape and didn't spread when baked. I think the cream of tartar made a difference, and the cookies did not come out too cakey either! This recipe is going in my \"favorites\" cookbook.",
+      "original_content": {
+        "ingredients": [
+          "1 cup butter, softened",
+          "1 cup white sugar",
+          "1 cup packed brown sugar",
+          "2 eggs",
+          "2 teaspoons vanilla extract",
+          "1 teaspoon baking soda",
+          "2 teaspoons hot water",
+          "0.5 teaspoon salt",
+          "3 cups all-purpose flour",
+          "2 cups semisweet chocolate chips",
+          "1 cup chopped walnuts"
+        ],
+        "instructions": [
+          "Gather your ingredients, making sure your butter is softened, and your eggs are room temperature.",
+          "Preheat the oven to 350 degrees F (175 degrees C). Beat butter, white sugar, and brown sugar with an electric mixer in a large bowl until smooth.",
+          "Beat in eggs, one at a time, then stir in vanilla.",
+          "Dissolve baking soda in hot water. Add to batter along with salt.",
+          "Stir in flour, chocolate chips, and walnuts.",
+          "Drop spoonfuls of dough 2 inches apart onto ungreased baking sheets.",
+          "Bake in the preheated oven until edges are nicely browned, about 10 minutes.",
+          "Cool on the baking sheets briefly before removing to a wire rack to cool completely.",
+          "Store in an airtight container or serve immediately and enjoy!"
+        ]
+      },
+      "expected_behavior": [
+        "White sugar: 1 cup -> 0.5 cup.",
+        "Packed brown sugar: 1 cup -> 1.5 cups.",
+        "Remove 2 teaspoons hot water AND the instruction to dissolve baking soda in water; retain baking soda.",
+        "Add 1 teaspoon cream of tartar AND incorporate it into the batter instructions.",
+        "Chill batter for at least 1 hour before scooping/baking.",
+        "Preserve unrelated ingredients, directions, temperature, and serving metadata. No extra yolk: that belongs to another review."
+      ],
+      "oracle_application": {
+        "status": "passed",
+        "failures": [],
+        "transitions": [
+          {
+            "edit": {
+              "target": "ingredients",
+              "operation": "replace",
+              "find": "1 cup white sugar",
+              "replace": "0.5 cup white sugar"
+            },
+            "before": [
+              "1 cup butter, softened",
+              "1 cup white sugar",
+              "1 cup packed brown sugar",
+              "2 eggs",
+              "2 teaspoons vanilla extract",
+              "1 teaspoon baking soda",
+              "2 teaspoons hot water",
+              "0.5 teaspoon salt",
+              "3 cups all-purpose flour",
+              "2 cups semisweet chocolate chips",
+              "1 cup chopped walnuts"
+            ],
+            "after": [
+              "1 cup butter, softened",
+              "0.5 cup white sugar",
+              "1 cup packed brown sugar",
+              "2 eggs",
+              "2 teaspoons vanilla extract",
+              "1 teaspoon baking soda",
+              "2 teaspoons hot water",
+              "0.5 teaspoon salt",
+              "3 cups all-purpose flour",
+              "2 cups semisweet chocolate chips",
+              "1 cup chopped walnuts"
+            ],
+            "records": [
+              {
+                "type": "ingredient",
+                "from_text": "1 cup white sugar",
+                "to_text": "0.5 cup white sugar",
+                "operation": "replace"
+              }
+            ],
+            "content_changed": true,
+            "literal_contract_passed": true,
+            "unresolved_anchor_or_payload": null,
+            "ledger": {
+              "passed": true,
+              "issues": []
+            }
+          },
+          {
+            "edit": {
+              "target": "ingredients",
+              "operation": "replace",
+              "find": "1 cup packed brown sugar",
+              "replace": "1.5 cups packed brown sugar"
+            },
+            "before": [
+              "1 cup butter, softened",
+              "0.5 cup white sugar",
+              "1 cup packed brown sugar",
+              "2 eggs",
+              "2 teaspoons vanilla extract",
+              "1 teaspoon baking soda",
+              "2 teaspoons hot water",
+              "0.5 teaspoon salt",
+              "3 cups all-purpose flour",
+              "2 cups semisweet chocolate chips",
+              "1 cup chopped walnuts"
+            ],
+            "after": [
+              "1 cup butter, softened",
+              "0.5 cup white sugar",
+              "1.5 cups packed brown sugar",
+              "2 eggs",
+              "2 teaspoons vanilla extract",
+              "1 teaspoon baking soda",
+              "2 teaspoons hot water",
+              "0.5 teaspoon salt",
+              "3 cups all-purpose flour",
+              "2 cups semisweet chocolate chips",
+              "1 cup chopped walnuts"
+            ],
+            "records": [
+              {
+                "type": "ingredient",
+                "from_text": "1 cup packed brown sugar",
+                "to_text": "1.5 cups packed brown sugar",
+                "operation": "replace"
+              }
+            ],
+            "content_changed": true,
+            "literal_contract_passed": true,
+            "unresolved_anchor_or_payload": null,
+            "ledger": {
+              "passed": true,
+              "issues": []
+            }
+          },
+          {
+            "edit": {
+              "target": "ingredients",
+              "operation": "remove",
+              "find": "2 teaspoons hot water"
+            },
+            "before": [
+              "1 cup butter, softened",
+              "0.5 cup white sugar",
+              "1.5 cups packed brown sugar",
+              "2 eggs",
+              "2 teaspoons vanilla extract",
+              "1 teaspoon baking soda",
+              "2 teaspoons hot water",
+              "0.5 teaspoon salt",
+              "3 cups all-purpose flour",
+              "2 cups semisweet chocolate chips",
+              "1 cup chopped walnuts"
+            ],
+            "after": [
+              "1 cup butter, softened",
+              "0.5 cup white sugar",
+              "1.5 cups packed brown sugar",
+              "2 eggs",
+              "2 teaspoons vanilla extract",
+              "1 teaspoon baking soda",
+              "0.5 teaspoon salt",
+              "3 cups all-purpose flour",
+              "2 cups semisweet chocolate chips",
+              "1 cup chopped walnuts"
+            ],
+            "records": [
+              {
+                "type": "ingredient",
+                "from_text": "2 teaspoons hot water",
+                "to_text": "",
+                "operation": "remove"
+              }
+            ],
+            "content_changed": true,
+            "literal_contract_passed": true,
+            "unresolved_anchor_or_payload": null,
+            "ledger": {
+              "passed": true,
+              "issues": []
+            }
+          },
+          {
+            "edit": {
+              "target": "ingredients",
+              "operation": "add_after",
+              "find": "1 teaspoon baking soda",
+              "add": "1 teaspoon cream of tartar"
+            },
+            "before": [
+              "1 cup butter, softened",
+              "0.5 cup white sugar",
+              "1.5 cups packed brown sugar",
+              "2 eggs",
+              "2 teaspoons vanilla extract",
+              "1 teaspoon baking soda",
+              "0.5 teaspoon salt",
+              "3 cups all-purpose flour",
+              "2 cups semisweet chocolate chips",
+              "1 cup chopped walnuts"
+            ],
+            "after": [
+              "1 cup butter, softened",
+              "0.5 cup white sugar",
+              "1.5 cups packed brown sugar",
+              "2 eggs",
+              "2 teaspoons vanilla extract",
+              "1 teaspoon baking soda",
+              "1 teaspoon cream of tartar",
+              "0.5 teaspoon salt",
+              "3 cups all-purpose flour",
+              "2 cups semisweet chocolate chips",
+              "1 cup chopped walnuts"
+            ],
+            "records": [
+              {
+                "type": "ingredient",
+                "from_text": "",
+                "to_text": "1 teaspoon cream of tartar",
+                "operation": "add"
+              }
+            ],
+            "content_changed": true,
+            "literal_contract_passed": true,
+            "unresolved_anchor_or_payload": null,
+            "ledger": {
+              "passed": true,
+              "issues": []
+            }
+          },
+          {
+            "edit": {
+              "target": "instructions",
+              "operation": "replace",
+              "find": "Dissolve baking soda in hot water. Add to batter along with salt.",
+              "replace": "Add baking soda, salt, and cream of tartar to the batter."
+            },
+            "before": [
+              "Gather your ingredients, making sure your butter is softened, and your eggs are room temperature.",
+              "Preheat the oven to 350 degrees F (175 degrees C). Beat butter, white sugar, and brown sugar with an electric mixer in a large bowl until smooth.",
+              "Beat in eggs, one at a time, then stir in vanilla.",
+              "Dissolve baking soda in hot water. Add to batter along with salt.",
+              "Stir in flour, chocolate chips, and walnuts.",
+              "Drop spoonfuls of dough 2 inches apart onto ungreased baking sheets.",
+              "Bake in the preheated oven until edges are nicely browned, about 10 minutes.",
+              "Cool on the baking sheets briefly before removing to a wire rack to cool completely.",
+              "Store in an airtight container or serve immediately and enjoy!"
+            ],
+            "after": [
+              "Gather your ingredients, making sure your butter is softened, and your eggs are room temperature.",
+              "Preheat the oven to 350 degrees F (175 degrees C). Beat butter, white sugar, and brown sugar with an electric mixer in a large bowl until smooth.",
+              "Beat in eggs, one at a time, then stir in vanilla.",
+              "Add baking soda, salt, and cream of tartar to the batter.",
+              "Stir in flour, chocolate chips, and walnuts.",
+              "Drop spoonfuls of dough 2 inches apart onto ungreased baking sheets.",
+              "Bake in the preheated oven until edges are nicely browned, about 10 minutes.",
+              "Cool on the baking sheets briefly before removing to a wire rack to cool completely.",
+              "Store in an airtight container or serve immediately and enjoy!"
+            ],
+            "records": [
+              {
+                "type": "instruction",
+                "from_text": "Dissolve baking soda in hot water. Add to batter along with salt.",
+                "to_text": "Add baking soda, salt, and cream of tartar to the batter.",
+                "operation": "replace"
+              }
+            ],
+            "content_changed": true,
+            "literal_contract_passed": true,
+            "unresolved_anchor_or_payload": null,
+            "ledger": {
+              "passed": true,
+              "issues": []
+            }
+          },
+          {
+            "edit": {
+              "target": "instructions",
+              "operation": "add_after",
+              "find": "Stir in flour, chocolate chips, and walnuts.",
+              "add": "Refrigerate the batter for at least 1 hour before scooping and baking."
+            },
+            "before": [
+              "Gather your ingredients, making sure your butter is softened, and your eggs are room temperature.",
+              "Preheat the oven to 350 degrees F (175 degrees C). Beat butter, white sugar, and brown sugar with an electric mixer in a large bowl until smooth.",
+              "Beat in eggs, one at a time, then stir in vanilla.",
+              "Add baking soda, salt, and cream of tartar to the batter.",
+              "Stir in flour, chocolate chips, and walnuts.",
+              "Drop spoonfuls of dough 2 inches apart onto ungreased baking sheets.",
+              "Bake in the preheated oven until edges are nicely browned, about 10 minutes.",
+              "Cool on the baking sheets briefly before removing to a wire rack to cool completely.",
+              "Store in an airtight container or serve immediately and enjoy!"
+            ],
+            "after": [
+              "Gather your ingredients, making sure your butter is softened, and your eggs are room temperature.",
+              "Preheat the oven to 350 degrees F (175 degrees C). Beat butter, white sugar, and brown sugar with an electric mixer in a large bowl until smooth.",
+              "Beat in eggs, one at a time, then stir in vanilla.",
+              "Add baking soda, salt, and cream of tartar to the batter.",
+              "Stir in flour, chocolate chips, and walnuts.",
+              "Refrigerate the batter for at least 1 hour before scooping and baking.",
+              "Drop spoonfuls of dough 2 inches apart onto ungreased baking sheets.",
+              "Bake in the preheated oven until edges are nicely browned, about 10 minutes.",
+              "Cool on the baking sheets briefly before removing to a wire rack to cool completely.",
+              "Store in an airtight container or serve immediately and enjoy!"
+            ],
+            "records": [
+              {
+                "type": "instruction",
+                "from_text": "",
+                "to_text": "Refrigerate the batter for at least 1 hour before scooping and baking.",
+                "operation": "add"
+              }
+            ],
+            "content_changed": true,
+            "literal_contract_passed": true,
+            "unresolved_anchor_or_payload": null,
+            "ledger": {
+              "passed": true,
+              "issues": []
+            }
+          }
+        ],
+        "actual_content": {
+          "ingredients": [
+            "1 cup butter, softened",
+            "0.5 cup white sugar",
+            "1.5 cups packed brown sugar",
+            "2 eggs",
+            "2 teaspoons vanilla extract",
+            "1 teaspoon baking soda",
+            "1 teaspoon cream of tartar",
+            "0.5 teaspoon salt",
+            "3 cups all-purpose flour",
+            "2 cups semisweet chocolate chips",
+            "1 cup chopped walnuts"
+          ],
+          "instructions": [
+            "Gather your ingredients, making sure your butter is softened, and your eggs are room temperature.",
+            "Preheat the oven to 350 degrees F (175 degrees C). Beat butter, white sugar, and brown sugar with an electric mixer in a large bowl until smooth.",
+            "Beat in eggs, one at a time, then stir in vanilla.",
+            "Add baking soda, salt, and cream of tartar to the batter.",
+            "Stir in flour, chocolate chips, and walnuts.",
+            "Refrigerate the batter for at least 1 hour before scooping and baking.",
+            "Drop spoonfuls of dough 2 inches apart onto ungreased baking sheets.",
+            "Bake in the preheated oven until edges are nicely browned, about 10 minutes.",
+            "Cool on the baking sheets briefly before removing to a wire rack to cool completely.",
+            "Store in an airtight container or serve immediately and enjoy!"
+          ]
+        },
+        "actual_diff": {
+          "ingredients": [
+            "--- original/ingredients",
+            "+++ actual/ingredients",
+            "@@ -1,10 +1,10 @@",
+            " 1 cup butter, softened",
+            "-1 cup white sugar",
+            "-1 cup packed brown sugar",
+            "+0.5 cup white sugar",
+            "+1.5 cups packed brown sugar",
+            " 2 eggs",
+            " 2 teaspoons vanilla extract",
+            " 1 teaspoon baking soda",
+            "-2 teaspoons hot water",
+            "+1 teaspoon cream of tartar",
+            " 0.5 teaspoon salt",
+            " 3 cups all-purpose flour",
+            " 2 cups semisweet chocolate chips"
+          ],
+          "instructions": [
+            "--- original/instructions",
+            "+++ actual/instructions",
+            "@@ -1,8 +1,9 @@",
+            " Gather your ingredients, making sure your butter is softened, and your eggs are room temperature.",
+            " Preheat the oven to 350 degrees F (175 degrees C). Beat butter, white sugar, and brown sugar with an electric mixer in a large bowl until smooth.",
+            " Beat in eggs, one at a time, then stir in vanilla.",
+            "-Dissolve baking soda in hot water. Add to batter along with salt.",
+            "+Add baking soda, salt, and cream of tartar to the batter.",
+            " Stir in flour, chocolate chips, and walnuts.",
+            "+Refrigerate the batter for at least 1 hour before scooping and baking.",
+            " Drop spoonfuls of dough 2 inches apart onto ungreased baking sheets.",
+            " Bake in the preheated oven until edges are nicely browned, about 10 minutes.",
+            " Cool on the baking sheets briefly before removing to a wire rack to cool completely."
+          ]
+        },
+        "reported_changes": [
+          {
+            "type": "ingredient",
+            "from_text": "1 cup white sugar",
+            "to_text": "0.5 cup white sugar",
+            "operation": "replace"
+          },
+          {
+            "type": "ingredient",
+            "from_text": "1 cup packed brown sugar",
+            "to_text": "1.5 cups packed brown sugar",
+            "operation": "replace"
+          },
+          {
+            "type": "ingredient",
+            "from_text": "2 teaspoons hot water",
+            "to_text": "",
+            "operation": "remove"
+          },
+          {
+            "type": "ingredient",
+            "from_text": "",
+            "to_text": "1 teaspoon cream of tartar",
+            "operation": "add"
+          },
+          {
+            "type": "instruction",
+            "from_text": "Dissolve baking soda in hot water. Add to batter along with salt.",
+            "to_text": "Add baking soda, salt, and cream of tartar to the batter.",
+            "operation": "replace"
+          },
+          {
+            "type": "instruction",
+            "from_text": "",
+            "to_text": "Refrigerate the batter for at least 1 hour before scooping and baking.",
+            "operation": "add"
+          }
+        ],
+        "proposal_projection": {
+          "content": {
+            "ingredients": [
+              "1 cup butter, softened",
+              "0.5 cup white sugar",
+              "1.5 cups packed brown sugar",
+              "2 eggs",
+              "2 teaspoons vanilla extract",
+              "1 teaspoon baking soda",
+              "1 teaspoon cream of tartar",
+              "0.5 teaspoon salt",
+              "3 cups all-purpose flour",
+              "2 cups semisweet chocolate chips",
+              "1 cup chopped walnuts"
+            ],
+            "instructions": [
+              "Gather your ingredients, making sure your butter is softened, and your eggs are room temperature.",
+              "Preheat the oven to 350 degrees F (175 degrees C). Beat butter, white sugar, and brown sugar with an electric mixer in a large bowl until smooth.",
+              "Beat in eggs, one at a time, then stir in vanilla.",
+              "Add baking soda, salt, and cream of tartar to the batter.",
+              "Stir in flour, chocolate chips, and walnuts.",
+              "Refrigerate the batter for at least 1 hour before scooping and baking.",
+              "Drop spoonfuls of dough 2 inches apart onto ungreased baking sheets.",
+              "Bake in the preheated oven until edges are nicely browned, about 10 minutes.",
+              "Cool on the baking sheets briefly before removing to a wire rack to cool completely.",
+              "Store in an airtight container or serve immediately and enjoy!"
+            ]
+          },
+          "issues": [],
+          "checks": [
+            {
+              "id": "white_sugar",
+              "passed": true
+            },
+            {
+              "id": "brown_sugar",
+              "passed": true
+            },
+            {
+              "id": "water_ingredient_removed",
+              "passed": true
+            },
+            {
+              "id": "water_instruction_removed",
+              "passed": true
+            },
+            {
+              "id": "baking_soda_retained",
+              "passed": true
+            },
+            {
+              "id": "tartar_added",
+              "passed": true
+            },
+            {
+              "id": "tartar_incorporated",
+              "passed": true
+            },
+            {
+              "id": "chill_duration",
+              "passed": true
+            },
+            {
+              "id": "no_unrelated_yolk",
+              "passed": true
+            }
+          ]
+        },
+        "final_content_checks": [
+          {
+            "id": "white_sugar",
+            "passed": true
+          },
+          {
+            "id": "brown_sugar",
+            "passed": true
+          },
+          {
+            "id": "water_ingredient_removed",
+            "passed": true
+          },
+          {
+            "id": "water_instruction_removed",
+            "passed": true
+          },
+          {
+            "id": "baking_soda_retained",
+            "passed": true
+          },
+          {
+            "id": "tartar_added",
+            "passed": true
+          },
+          {
+            "id": "tartar_incorporated",
+            "passed": true
+          },
+          {
+            "id": "chill_duration",
+            "passed": true
+          },
+          {
+            "id": "no_unrelated_yolk",
+            "passed": true
+          }
+        ]
+      },
+      "extraction": {
+        "status": "returned",
+        "attempts": [
+          {
+            "request": {
+              "model": "gpt-3.5-turbo",
+              "messages": [
+                {
+                  "role": "user",
+                  "content": "You are an expert recipe analyst. Your job is to extract structured recipe modifications from user reviews.\n\nWhen a user shares their experience modifying a recipe, you need to:\n1. Identify exactly what changes they made\n2. Understand why they made those changes\n3. Convert their modifications into structured edit operations\n\nYou must output valid JSON that matches the ModificationObject schema.\n\nCategories:\n- \"ingredient_substitution\": Replacing one ingredient with another\n- \"quantity_adjustment\": Changing amounts of existing ingredients\n- \"technique_change\": Altering cooking method, temperature, time\n- \"addition\": Adding new ingredients or steps\n- \"removal\": Removing ingredients or steps\n\nEdit operations:\n- \"replace\": Find existing text and replace it\n- \"add_after\": Add new text after finding target text\n- \"remove\": Remove text that matches the find pattern\n\nBe precise with text matching - use the exact text from the original recipe when possible.\n\nOriginal Recipe:\nTitle: Best Chocolate Chip Cookies\nIngredients: ['1 cup butter, softened', '1 cup white sugar', '1 cup packed brown sugar', '2 eggs', '2 teaspoons vanilla extract', '1 teaspoon baking soda', '2 teaspoons hot water', '0.5 teaspoon salt', '3 cups all-purpose flour', '2 cups semisweet chocolate chips', '1 cup chopped walnuts']\nInstructions: ['Gather your ingredients, making sure your butter is softened, and your eggs are room temperature.', 'Preheat the oven to 350 degrees F (175 degrees C). Beat butter, white sugar, and brown sugar with an electric mixer in a large bowl until smooth.', 'Beat in eggs, one at a time, then stir in vanilla.', 'Dissolve baking soda in hot water. Add to batter along with salt.', 'Stir in flour, chocolate chips, and walnuts.', 'Drop spoonfuls of dough 2 inches apart onto ungreased baking sheets.', 'Bake in the preheated oven until edges are nicely browned, about 10 minutes.', 'Cool on the baking sheets briefly before removing to a wire rack to cool completely.', 'Store in an airtight container or serve immediately and enjoy!']\n\nUser Review: \"These are awesome cookies. I followed the advice of others by making the following tweaks: (1) I used a half cup of sugar and one-and-a-half cups of brown sugar; (2) I omitted the water; (3) I added a teaspoon of cream of tartar to the batter; (4) I refrigerated the batter for at least an hour before scooping and baking. The cookies retained their shape and didn't spread when baked. I think the cream of tartar made a difference, and the cookies did not come out too cakey either! This recipe is going in my \"favorites\" cookbook.\"\n\nExtract the recipe modifications from this review. The user has made changes to improve the recipe.\n\nOutput a JSON object with this structure:\n{\n    \"modification_type\": \"quantity_adjustment|ingredient_substitution|technique_change|addition|removal\",\n    \"reasoning\": \"Brief explanation of why this modification improves the recipe\",\n    \"edits\": [\n        {\n            \"target\": \"ingredients|instructions\",\n            \"operation\": \"replace|add_after|remove\",\n            \"find\": \"exact text to find\",\n            \"replace\": \"replacement text (for replace operations)\",\n            \"add\": \"text to add (for add_after operations)\"\n        }\n    ]\n}\n\nFocus on concrete changes the user actually made, not general suggestions."
+                }
+              ],
+              "response_format": {
+                "type": "json_object"
+              },
+              "temperature": 0.1,
+              "max_tokens": 1000
+            },
+            "response": {
+              "id": "chatcmpl-ERkNVfc8JWGlenmg8aNShHKXnxz7T",
+              "choices": [
+                {
+                  "finish_reason": "stop",
+                  "index": 0,
+                  "logprobs": null,
+                  "message": {
+                    "content": "{\n    \"modification_type\": \"quantity_adjustment\",\n    \"reasoning\": \"The user adjusted the sugar levels to their preference, resulting in a sweeter cookie with a different texture.\",\n    \"edits\": [\n        {\n            \"target\": \"ingredients\",\n            \"operation\": \"replace\",\n            \"find\": \"1 cup white sugar\",\n            \"replace\": \"1/2 cup white sugar\"\n        },\n        {\n            \"target\": \"ingredients\",\n            \"operation\": \"replace\",\n            \"find\": \"1 cup packed brown sugar\",\n            \"replace\": \"1 1/2 cups packed brown sugar\"\n        }\n    ]\n}",
+                    "refusal": null,
+                    "role": "assistant",
+                    "annotations": [],
+                    "audio": null,
+                    "function_call": null,
+                    "tool_calls": null
+                  }
+                }
+              ],
+              "created": 1790281841,
+              "model": "gpt-3.5-turbo-0125",
+              "object": "chat.completion",
+              "service_tier": "default",
+              "system_fingerprint": null,
+              "usage": {
+                "completion_tokens": 131,
+                "prompt_tokens": 736,
+                "total_tokens": 867,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              }
+            }
+          }
+        ],
+        "proposal": {
+          "modification_type": "quantity_adjustment",
+          "reasoning": "The user adjusted the sugar levels to their preference, resulting in a sweeter cookie with a different texture.",
+          "edits": [
+            {
+              "target": "ingredients",
+              "operation": "replace",
+              "find": "1 cup white sugar",
+              "replace": "1/2 cup white sugar"
+            },
+            {
+              "target": "ingredients",
+              "operation": "replace",
+              "find": "1 cup packed brown sugar",
+              "replace": "1 1/2 cups packed brown sugar"
+            }
+          ]
+        },
+        "semantic_review": "pending: compare each expected behavior with proposal; check wording, order, omissions, unsupported edits and quantity assumptions",
+        "content_screening": {
+          "status": "failed",
+          "checks": [
+            {
+              "id": "white_sugar",
+              "passed": true
+            },
+            {
+              "id": "brown_sugar",
+              "passed": true
+            },
+            {
+              "id": "water_ingredient_removed",
+              "passed": false
+            },
+            {
+              "id": "water_instruction_removed",
+              "passed": false
+            },
+            {
+              "id": "baking_soda_retained",
+              "passed": true
+            },
+            {
+              "id": "tartar_added",
+              "passed": false
+            },
+            {
+              "id": "tartar_incorporated",
+              "passed": false
+            },
+            {
+              "id": "chill_duration",
+              "passed": false
+            },
+            {
+              "id": "no_unrelated_yolk",
+              "passed": true
+            }
+          ],
+          "note": "Heuristic screening only; complete the semantic review separately."
+        }
+      },
+      "actual_application": {
+        "status": "passed",
+        "failures": [],
+        "transitions": [
+          {
+            "edit": {
+              "target": "ingredients",
+              "operation": "replace",
+              "find": "1 cup white sugar",
+              "replace": "1/2 cup white sugar"
+            },
+            "before": [
+              "1 cup butter, softened",
+              "1 cup white sugar",
+              "1 cup packed brown sugar",
+              "2 eggs",
+              "2 teaspoons vanilla extract",
+              "1 teaspoon baking soda",
+              "2 teaspoons hot water",
+              "0.5 teaspoon salt",
+              "3 cups all-purpose flour",
+              "2 cups semisweet chocolate chips",
+              "1 cup chopped walnuts"
+            ],
+            "after": [
+              "1 cup butter, softened",
+              "1/2 cup white sugar",
+              "1 cup packed brown sugar",
+              "2 eggs",
+              "2 teaspoons vanilla extract",
+              "1 teaspoon baking soda",
+              "2 teaspoons hot water",
+              "0.5 teaspoon salt",
+              "3 cups all-purpose flour",
+              "2 cups semisweet chocolate chips",
+              "1 cup chopped walnuts"
+            ],
+            "records": [
+              {
+                "type": "ingredient",
+                "from_text": "1 cup white sugar",
+                "to_text": "1/2 cup white sugar",
+                "operation": "replace"
+              }
+            ],
+            "content_changed": true,
+            "literal_contract_passed": true,
+            "unresolved_anchor_or_payload": null,
+            "ledger": {
+              "passed": true,
+              "issues": []
+            }
+          },
+          {
+            "edit": {
+              "target": "ingredients",
+              "operation": "replace",
+              "find": "1 cup packed brown sugar",
+              "replace": "1 1/2 cups packed brown sugar"
+            },
+            "before": [
+              "1 cup butter, softened",
+              "1/2 cup white sugar",
+              "1 cup packed brown sugar",
+              "2 eggs",
+              "2 teaspoons vanilla extract",
+              "1 teaspoon baking soda",
+              "2 teaspoons hot water",
+              "0.5 teaspoon salt",
+              "3 cups all-purpose flour",
+              "2 cups semisweet chocolate chips",
+              "1 cup chopped walnuts"
+            ],
+            "after": [
+              "1 cup butter, softened",
+              "1/2 cup white sugar",
+              "1 1/2 cups packed brown sugar",
+              "2 eggs",
+              "2 teaspoons vanilla extract",
+              "1 teaspoon baking soda",
+              "2 teaspoons hot water",
+              "0.5 teaspoon salt",
+              "3 cups all-purpose flour",
+              "2 cups semisweet chocolate chips",
+              "1 cup chopped walnuts"
+            ],
+            "records": [
+              {
+                "type": "ingredient",
+                "from_text": "1 cup packed brown sugar",
+                "to_text": "1 1/2 cups packed brown sugar",
+                "operation": "replace"
+              }
+            ],
+            "content_changed": true,
+            "literal_contract_passed": true,
+            "unresolved_anchor_or_payload": null,
+            "ledger": {
+              "passed": true,
+              "issues": []
+            }
+          }
+        ],
+        "actual_content": {
+          "ingredients": [
+            "1 cup butter, softened",
+            "1/2 cup white sugar",
+            "1 1/2 cups packed brown sugar",
+            "2 eggs",
+            "2 teaspoons vanilla extract",
+            "1 teaspoon baking soda",
+            "2 teaspoons hot water",
+            "0.5 teaspoon salt",
+            "3 cups all-purpose flour",
+            "2 cups semisweet chocolate chips",
+            "1 cup chopped walnuts"
+          ],
+          "instructions": [
+            "Gather your ingredients, making sure your butter is softened, and your eggs are room temperature.",
+            "Preheat the oven to 350 degrees F (175 degrees C). Beat butter, white sugar, and brown sugar with an electric mixer in a large bowl until smooth.",
+            "Beat in eggs, one at a time, then stir in vanilla.",
+            "Dissolve baking soda in hot water. Add to batter along with salt.",
+            "Stir in flour, chocolate chips, and walnuts.",
+            "Drop spoonfuls of dough 2 inches apart onto ungreased baking sheets.",
+            "Bake in the preheated oven until edges are nicely browned, about 10 minutes.",
+            "Cool on the baking sheets briefly before removing to a wire rack to cool completely.",
+            "Store in an airtight container or serve immediately and enjoy!"
+          ]
+        },
+        "actual_diff": {
+          "ingredients": [
+            "--- original/ingredients",
+            "+++ actual/ingredients",
+            "@@ -1,6 +1,6 @@",
+            " 1 cup butter, softened",
+            "-1 cup white sugar",
+            "-1 cup packed brown sugar",
+            "+1/2 cup white sugar",
+            "+1 1/2 cups packed brown sugar",
+            " 2 eggs",
+            " 2 teaspoons vanilla extract",
+            " 1 teaspoon baking soda"
+          ],
+          "instructions": []
+        },
+        "reported_changes": [
+          {
+            "type": "ingredient",
+            "from_text": "1 cup white sugar",
+            "to_text": "1/2 cup white sugar",
+            "operation": "replace"
+          },
+          {
+            "type": "ingredient",
+            "from_text": "1 cup packed brown sugar",
+            "to_text": "1 1/2 cups packed brown sugar",
+            "operation": "replace"
+          }
+        ],
+        "proposal_projection": {
+          "content": {
+            "ingredients": [
+              "1 cup butter, softened",
+              "1/2 cup white sugar",
+              "1 1/2 cups packed brown sugar",
+              "2 eggs",
+              "2 teaspoons vanilla extract",
+              "1 teaspoon baking soda",
+              "2 teaspoons hot water",
+              "0.5 teaspoon salt",
+              "3 cups all-purpose flour",
+              "2 cups semisweet chocolate chips",
+              "1 cup chopped walnuts"
+            ],
+            "instructions": [
+              "Gather your ingredients, making sure your butter is softened, and your eggs are room temperature.",
+              "Preheat the oven to 350 degrees F (175 degrees C). Beat butter, white sugar, and brown sugar with an electric mixer in a large bowl until smooth.",
+              "Beat in eggs, one at a time, then stir in vanilla.",
+              "Dissolve baking soda in hot water. Add to batter along with salt.",
+              "Stir in flour, chocolate chips, and walnuts.",
+              "Drop spoonfuls of dough 2 inches apart onto ungreased baking sheets.",
+              "Bake in the preheated oven until edges are nicely browned, about 10 minutes.",
+              "Cool on the baking sheets briefly before removing to a wire rack to cool completely.",
+              "Store in an airtight container or serve immediately and enjoy!"
+            ]
+          },
+          "issues": [],
+          "checks": [
+            {
+              "id": "white_sugar",
+              "passed": true
+            },
+            {
+              "id": "brown_sugar",
+              "passed": true
+            },
+            {
+              "id": "water_ingredient_removed",
+              "passed": false
+            },
+            {
+              "id": "water_instruction_removed",
+              "passed": false
+            },
+            {
+              "id": "baking_soda_retained",
+              "passed": true
+            },
+            {
+              "id": "tartar_added",
+              "passed": false
+            },
+            {
+              "id": "tartar_incorporated",
+              "passed": false
+            },
+            {
+              "id": "chill_duration",
+              "passed": false
+            },
+            {
+              "id": "no_unrelated_yolk",
+              "passed": true
+            }
+          ]
+        },
+        "final_content_checks": [
+          {
+            "id": "white_sugar",
+            "passed": true
+          },
+          {
+            "id": "brown_sugar",
+            "passed": true
+          },
+          {
+            "id": "water_ingredient_removed",
+            "passed": false
+          },
+          {
+            "id": "water_instruction_removed",
+            "passed": false
+          },
+          {
+            "id": "baking_soda_retained",
+            "passed": true
+          },
+          {
+            "id": "tartar_added",
+            "passed": false
+          },
+          {
+            "id": "tartar_incorporated",
+            "passed": false
+          },
+          {
+            "id": "chill_duration",
+            "passed": false
+          },
+          {
+            "id": "no_unrelated_yolk",
+            "passed": true
+          }
+        ]
+      },
+      "enhanced_recipe": {
+        "recipe_id": "10813_enhanced",
+        "original_recipe_id": "10813",
+        "title": "Best Chocolate Chip Cookies (Community Enhanced)",
+        "ingredients": [
+          "1 cup butter, softened",
+          "1/2 cup white sugar",
+          "1 1/2 cups packed brown sugar",
+          "2 eggs",
+          "2 teaspoons vanilla extract",
+          "1 teaspoon baking soda",
+          "2 teaspoons hot water",
+          "0.5 teaspoon salt",
+          "3 cups all-purpose flour",
+          "2 cups semisweet chocolate chips",
+          "1 cup chopped walnuts"
+        ],
+        "instructions": [
+          "Gather your ingredients, making sure your butter is softened, and your eggs are room temperature.",
+          "Preheat the oven to 350 degrees F (175 degrees C). Beat butter, white sugar, and brown sugar with an electric mixer in a large bowl until smooth.",
+          "Beat in eggs, one at a time, then stir in vanilla.",
+          "Dissolve baking soda in hot water. Add to batter along with salt.",
+          "Stir in flour, chocolate chips, and walnuts.",
+          "Drop spoonfuls of dough 2 inches apart onto ungreased baking sheets.",
+          "Bake in the preheated oven until edges are nicely browned, about 10 minutes.",
+          "Cool on the baking sheets briefly before removing to a wire rack to cool completely.",
+          "Store in an airtight container or serve immediately and enjoy!"
+        ],
+        "modifications_applied": [
+          {
+            "source_review": {
+              "text": "These are awesome cookies. I followed the advice of others by making the following tweaks: (1) I used a half cup of sugar and one-and-a-half cups of brown sugar; (2) I omitted the water; (3) I added a teaspoon of cream of tartar to the batter; (4) I refrigerated the batter for at least an hour before scooping and baking. The cookies retained their shape and didn't spread when baked. I think the cream of tartar made a difference, and the cookies did not come out too cakey either! This recipe is going in my \"favorites\" cookbook.",
+              "reviewer": null,
+              "rating": 5
+            },
+            "modification_type": "quantity_adjustment",
+            "reasoning": "The user adjusted the sugar levels to their preference, resulting in a sweeter cookie with a different texture.",
+            "changes_made": [
+              {
+                "type": "ingredient",
+                "from_text": "1 cup white sugar",
+                "to_text": "1/2 cup white sugar",
+                "operation": "replace"
+              },
+              {
+                "type": "ingredient",
+                "from_text": "1 cup packed brown sugar",
+                "to_text": "1 1/2 cups packed brown sugar",
+                "operation": "replace"
+              }
+            ]
+          }
+        ],
+        "enhancement_summary": {
+          "total_changes": 2,
+          "change_types": [
+            "quantity_adjustment"
+          ],
+          "expected_impact": "The user adjusted the sugar levels to their preference, resulting in a sweeter cookie with a different texture."
+        },
+        "description": "This classic chocolate chip cookie recipe makes deliciously buttery cookies with crisp edges, chewy middles, and gooey chocolate chips in every bite.",
+        "servings": "48",
+        "prep_time": null,
+        "cook_time": null,
+        "total_time": null,
+        "created_at": "2026-09-24T16:30:44.150219",
+        "pipeline_version": "1.0.0"
+      },
+      "packaging_checks": {
+        "ledger_preserved": true,
+        "content_preserved": true,
+        "count_matches_records": true,
+        "source_matches": true
+      }
+    },
+    {
+      "id": "soup_tried_vs_planned",
+      "review_text": "Def has a kick! Very thick.. Even w 2% milk- will use more broth next time. Used fresh grated ginger. Hearty and yummy!",
+      "original_content": {
+        "ingredients": [
+          "2 tablespoons olive oil",
+          "1.5 pounds peeled raw sweet potatoes, cut into 1-inch chunks",
+          "1 large onion, cut into large dice",
+          "1 tablespoon butter",
+          "1 pinch sugar",
+          "3 large garlic cloves, thickly sliced",
+          "1.5 teaspoons ground ginger",
+          "0.5 teaspoon ground nutmeg",
+          "0.125 teaspoon cayenne pepper",
+          "3 cups chicken broth, homemade or from a carton or can",
+          "1.5 cups half-and-half (or whole milk)",
+          "Salt and freshly ground pepper, to taste",
+          "Garnish: chopped honey-roasted peanuts"
+        ],
+        "instructions": [
+          "Gather the ingredients.",
+          "Heat oil over medium-high heat in a large, deep saute pan until shimmering. Add sweet potatoes, then onion; saute, stirring very little at first, then more frequently, until vegetables start to turn golden brown, 7 to 8 minutes.",
+          "Reduce heat to low and add butter, sugar and garlic; continue cooking until all vegetables are a rich spotty caramel color, about 10 minutes longer.",
+          "Add ginger, nutmeg and cayenne pepper; continue to saute until fragrant, 30 seconds to 1 minute longer.",
+          "Add broth; bring to a simmer over medium-high heat. Reduce heat to low and simmer, partially covered, until sweet potatoes are tender, about 10 minutes.",
+          "Using an immersion blender or traditional blender, puree until very smooth, 30 seconds to 1 minute. (If using a traditional blender, vent it either by removing the lid&#39;s pop-out center or by lifting one edge of the lid. Drape the blender canister with a kitchen towel. To &#39;clean&#39; the canister, pour in a little half-and-half, blend briefly, then add to the soup.)",
+          "Return to pan (or a soup pot); add enough half-and-half so the mixture is souplike, yet thick enough to float garnish. Taste, and add salt and pepper if needed. Heat through, ladle into bowls, garnish and serve."
+        ]
+      },
+      "expected_behavior": [
+        "Recognize 2% milk as used, not a future plan; replace half-and-half/whole-milk references consistently.",
+        "Recognize fresh grated ginger as used, replacing ground ginger.",
+        "Do NOT increase broth: \"will use more broth next time\" is untested future intent.",
+        "No fresh ginger quantity was supplied. Surface that ambiguity; do not claim a numerical ground-to-fresh conversion is reviewer evidence. Retaining a recipe quantity must be labeled an assumption.",
+        "Milk volume was not supplied. Keeping the original volume is an explicit assumption, not a measured amount from the review.",
+        "Preserve unrelated recipe content. An unresolved/needs-clarification result is acceptable if the supported tweaks and missing quantities are retained."
+      ],
+      "extraction": {
+        "status": "returned",
+        "attempts": [
+          {
+            "request": {
+              "model": "gpt-3.5-turbo",
+              "messages": [
+                {
+                  "role": "user",
+                  "content": "You are an expert recipe analyst. Your job is to extract structured recipe modifications from user reviews.\n\nWhen a user shares their experience modifying a recipe, you need to:\n1. Identify exactly what changes they made\n2. Understand why they made those changes\n3. Convert their modifications into structured edit operations\n\nYou must output valid JSON that matches the ModificationObject schema.\n\nCategories:\n- \"ingredient_substitution\": Replacing one ingredient with another\n- \"quantity_adjustment\": Changing amounts of existing ingredients\n- \"technique_change\": Altering cooking method, temperature, time\n- \"addition\": Adding new ingredients or steps\n- \"removal\": Removing ingredients or steps\n\nEdit operations:\n- \"replace\": Find existing text and replace it\n- \"add_after\": Add new text after finding target text\n- \"remove\": Remove text that matches the find pattern\n\nBe precise with text matching - use the exact text from the original recipe when possible.\n\nOriginal Recipe:\nTitle: Creamy Sweet Potato With Ginger Soup\nIngredients: ['2 tablespoons olive oil', '1.5 pounds peeled raw sweet potatoes, cut into 1-inch chunks', '1 large onion, cut into large dice', '1 tablespoon butter', '1 pinch sugar', '3 large garlic cloves, thickly sliced', '1.5 teaspoons ground ginger', '0.5 teaspoon ground nutmeg', '0.125 teaspoon cayenne pepper', '3 cups chicken broth, homemade or from a carton or can', '1.5 cups half-and-half (or whole milk)', 'Salt and freshly ground pepper, to taste', 'Garnish: chopped honey-roasted peanuts']\nInstructions: ['Gather the ingredients.', 'Heat oil over medium-high heat in a large, deep saute pan until shimmering. Add sweet potatoes, then onion; saute, stirring very little at first, then more frequently, until vegetables start to turn golden brown, 7 to 8 minutes.', 'Reduce heat to low and add butter, sugar and garlic; continue cooking until all vegetables are a rich spotty caramel color, about 10 minutes longer.', 'Add ginger, nutmeg and cayenne pepper; continue to saute until fragrant, 30 seconds to 1 minute longer.', 'Add broth; bring to a simmer over medium-high heat. Reduce heat to low and simmer, partially covered, until sweet potatoes are tender, about 10 minutes.', 'Using an immersion blender or traditional blender, puree until very smooth, 30 seconds to 1 minute. (If using a traditional blender, vent it either by removing the lid&#39;s pop-out center or by lifting one edge of the lid. Drape the blender canister with a kitchen towel. To &#39;clean&#39; the canister, pour in a little half-and-half, blend briefly, then add to the soup.)', 'Return to pan (or a soup pot); add enough half-and-half so the mixture is souplike, yet thick enough to float garnish. Taste, and add salt and pepper if needed. Heat through, ladle into bowls, garnish and serve.']\n\nUser Review: \"Def has a kick! Very thick.. Even w 2% milk- will use more broth next time. Used fresh grated ginger. Hearty and yummy!\"\n\nExtract the recipe modifications from this review. The user has made changes to improve the recipe.\n\nOutput a JSON object with this structure:\n{\n    \"modification_type\": \"quantity_adjustment|ingredient_substitution|technique_change|addition|removal\",\n    \"reasoning\": \"Brief explanation of why this modification improves the recipe\",\n    \"edits\": [\n        {\n            \"target\": \"ingredients|instructions\",\n            \"operation\": \"replace|add_after|remove\",\n            \"find\": \"exact text to find\",\n            \"replace\": \"replacement text (for replace operations)\",\n            \"add\": \"text to add (for add_after operations)\"\n        }\n    ]\n}\n\nFocus on concrete changes the user actually made, not general suggestions."
+                }
+              ],
+              "response_format": {
+                "type": "json_object"
+              },
+              "temperature": 0.1,
+              "max_tokens": 1000
+            },
+            "response": {
+              "id": "chatcmpl-ERkNZHERuIpPOx7rSbuNeXK3lpSoB",
+              "choices": [
+                {
+                  "finish_reason": "stop",
+                  "index": 0,
+                  "logprobs": null,
+                  "message": {
+                    "content": "{\n    \"modification_type\": \"quantity_adjustment\",\n    \"reasoning\": \"To adjust the thickness of the soup and enhance the flavor\",\n    \"edits\": [\n        {\n            \"target\": \"ingredients\",\n            \"operation\": \"replace\",\n            \"find\": \"1.5 cups half-and-half (or whole milk)\",\n            \"replace\": \"2 cups chicken broth\"\n        }\n    ]\n}",
+                    "refusal": null,
+                    "role": "assistant",
+                    "annotations": [],
+                    "audio": null,
+                    "function_call": null,
+                    "tool_calls": null
+                  }
+                }
+              ],
+              "created": 1790281845,
+              "model": "gpt-3.5-turbo-0125",
+              "object": "chat.completion",
+              "service_tier": "default",
+              "system_fingerprint": null,
+              "usage": {
+                "completion_tokens": 83,
+                "prompt_tokens": 834,
+                "total_tokens": 917,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              }
+            }
+          }
+        ],
+        "proposal": {
+          "modification_type": "quantity_adjustment",
+          "reasoning": "To adjust the thickness of the soup and enhance the flavor",
+          "edits": [
+            {
+              "target": "ingredients",
+              "operation": "replace",
+              "find": "1.5 cups half-and-half (or whole milk)",
+              "replace": "2 cups chicken broth"
+            }
+          ]
+        },
+        "semantic_review": "pending: compare each expected behavior with proposal; check wording, order, omissions, unsupported edits and quantity assumptions",
+        "content_screening": {
+          "status": "failed",
+          "checks": [
+            {
+              "id": "milk_identified",
+              "passed": false
+            },
+            {
+              "id": "fresh_ginger_identified",
+              "passed": false
+            },
+            {
+              "id": "ground_ginger_removed",
+              "passed": false
+            },
+            {
+              "id": "milk_directions_consistent",
+              "passed": false
+            },
+            {
+              "id": "broth_unchanged",
+              "passed": true
+            }
+          ],
+          "note": "Heuristic screening only; complete the semantic review separately."
+        }
+      },
+      "actual_application": {
+        "status": "passed",
+        "failures": [],
+        "transitions": [
+          {
+            "edit": {
+              "target": "ingredients",
+              "operation": "replace",
+              "find": "1.5 cups half-and-half (or whole milk)",
+              "replace": "2 cups chicken broth"
+            },
+            "before": [
+              "2 tablespoons olive oil",
+              "1.5 pounds peeled raw sweet potatoes, cut into 1-inch chunks",
+              "1 large onion, cut into large dice",
+              "1 tablespoon butter",
+              "1 pinch sugar",
+              "3 large garlic cloves, thickly sliced",
+              "1.5 teaspoons ground ginger",
+              "0.5 teaspoon ground nutmeg",
+              "0.125 teaspoon cayenne pepper",
+              "3 cups chicken broth, homemade or from a carton or can",
+              "1.5 cups half-and-half (or whole milk)",
+              "Salt and freshly ground pepper, to taste",
+              "Garnish: chopped honey-roasted peanuts"
+            ],
+            "after": [
+              "2 tablespoons olive oil",
+              "1.5 pounds peeled raw sweet potatoes, cut into 1-inch chunks",
+              "1 large onion, cut into large dice",
+              "1 tablespoon butter",
+              "1 pinch sugar",
+              "3 large garlic cloves, thickly sliced",
+              "1.5 teaspoons ground ginger",
+              "0.5 teaspoon ground nutmeg",
+              "0.125 teaspoon cayenne pepper",
+              "3 cups chicken broth, homemade or from a carton or can",
+              "2 cups chicken broth",
+              "Salt and freshly ground pepper, to taste",
+              "Garnish: chopped honey-roasted peanuts"
+            ],
+            "records": [
+              {
+                "type": "ingredient",
+                "from_text": "1.5 cups half-and-half (or whole milk)",
+                "to_text": "2 cups chicken broth",
+                "operation": "replace"
+              }
+            ],
+            "content_changed": true,
+            "literal_contract_passed": true,
+            "unresolved_anchor_or_payload": null,
+            "ledger": {
+              "passed": true,
+              "issues": []
+            }
+          }
+        ],
+        "actual_content": {
+          "ingredients": [
+            "2 tablespoons olive oil",
+            "1.5 pounds peeled raw sweet potatoes, cut into 1-inch chunks",
+            "1 large onion, cut into large dice",
+            "1 tablespoon butter",
+            "1 pinch sugar",
+            "3 large garlic cloves, thickly sliced",
+            "1.5 teaspoons ground ginger",
+            "0.5 teaspoon ground nutmeg",
+            "0.125 teaspoon cayenne pepper",
+            "3 cups chicken broth, homemade or from a carton or can",
+            "2 cups chicken broth",
+            "Salt and freshly ground pepper, to taste",
+            "Garnish: chopped honey-roasted peanuts"
+          ],
+          "instructions": [
+            "Gather the ingredients.",
+            "Heat oil over medium-high heat in a large, deep saute pan until shimmering. Add sweet potatoes, then onion; saute, stirring very little at first, then more frequently, until vegetables start to turn golden brown, 7 to 8 minutes.",
+            "Reduce heat to low and add butter, sugar and garlic; continue cooking until all vegetables are a rich spotty caramel color, about 10 minutes longer.",
+            "Add ginger, nutmeg and cayenne pepper; continue to saute until fragrant, 30 seconds to 1 minute longer.",
+            "Add broth; bring to a simmer over medium-high heat. Reduce heat to low and simmer, partially covered, until sweet potatoes are tender, about 10 minutes.",
+            "Using an immersion blender or traditional blender, puree until very smooth, 30 seconds to 1 minute. (If using a traditional blender, vent it either by removing the lid&#39;s pop-out center or by lifting one edge of the lid. Drape the blender canister with a kitchen towel. To &#39;clean&#39; the canister, pour in a little half-and-half, blend briefly, then add to the soup.)",
+            "Return to pan (or a soup pot); add enough half-and-half so the mixture is souplike, yet thick enough to float garnish. Taste, and add salt and pepper if needed. Heat through, ladle into bowls, garnish and serve."
+          ]
+        },
+        "actual_diff": {
+          "ingredients": [
+            "--- original/ingredients",
+            "+++ actual/ingredients",
+            "@@ -8,6 +8,6 @@",
+            " 0.5 teaspoon ground nutmeg",
+            " 0.125 teaspoon cayenne pepper",
+            " 3 cups chicken broth, homemade or from a carton or can",
+            "-1.5 cups half-and-half (or whole milk)",
+            "+2 cups chicken broth",
+            " Salt and freshly ground pepper, to taste",
+            " Garnish: chopped honey-roasted peanuts"
+          ],
+          "instructions": []
+        },
+        "reported_changes": [
+          {
+            "type": "ingredient",
+            "from_text": "1.5 cups half-and-half (or whole milk)",
+            "to_text": "2 cups chicken broth",
+            "operation": "replace"
+          }
+        ],
+        "proposal_projection": {
+          "content": {
+            "ingredients": [
+              "2 tablespoons olive oil",
+              "1.5 pounds peeled raw sweet potatoes, cut into 1-inch chunks",
+              "1 large onion, cut into large dice",
+              "1 tablespoon butter",
+              "1 pinch sugar",
+              "3 large garlic cloves, thickly sliced",
+              "1.5 teaspoons ground ginger",
+              "0.5 teaspoon ground nutmeg",
+              "0.125 teaspoon cayenne pepper",
+              "3 cups chicken broth, homemade or from a carton or can",
+              "2 cups chicken broth",
+              "Salt and freshly ground pepper, to taste",
+              "Garnish: chopped honey-roasted peanuts"
+            ],
+            "instructions": [
+              "Gather the ingredients.",
+              "Heat oil over medium-high heat in a large, deep saute pan until shimmering. Add sweet potatoes, then onion; saute, stirring very little at first, then more frequently, until vegetables start to turn golden brown, 7 to 8 minutes.",
+              "Reduce heat to low and add butter, sugar and garlic; continue cooking until all vegetables are a rich spotty caramel color, about 10 minutes longer.",
+              "Add ginger, nutmeg and cayenne pepper; continue to saute until fragrant, 30 seconds to 1 minute longer.",
+              "Add broth; bring to a simmer over medium-high heat. Reduce heat to low and simmer, partially covered, until sweet potatoes are tender, about 10 minutes.",
+              "Using an immersion blender or traditional blender, puree until very smooth, 30 seconds to 1 minute. (If using a traditional blender, vent it either by removing the lid&#39;s pop-out center or by lifting one edge of the lid. Drape the blender canister with a kitchen towel. To &#39;clean&#39; the canister, pour in a little half-and-half, blend briefly, then add to the soup.)",
+              "Return to pan (or a soup pot); add enough half-and-half so the mixture is souplike, yet thick enough to float garnish. Taste, and add salt and pepper if needed. Heat through, ladle into bowls, garnish and serve."
+            ]
+          },
+          "issues": [],
+          "checks": [
+            {
+              "id": "milk_identified",
+              "passed": false
+            },
+            {
+              "id": "fresh_ginger_identified",
+              "passed": false
+            },
+            {
+              "id": "ground_ginger_removed",
+              "passed": false
+            },
+            {
+              "id": "milk_directions_consistent",
+              "passed": false
+            },
+            {
+              "id": "broth_unchanged",
+              "passed": true
+            }
+          ]
+        },
+        "final_content_checks": [
+          {
+            "id": "milk_identified",
+            "passed": false
+          },
+          {
+            "id": "fresh_ginger_identified",
+            "passed": false
+          },
+          {
+            "id": "ground_ginger_removed",
+            "passed": false
+          },
+          {
+            "id": "milk_directions_consistent",
+            "passed": false
+          },
+          {
+            "id": "broth_unchanged",
+            "passed": true
+          }
+        ]
+      },
+      "enhanced_recipe": {
+        "recipe_id": "77935_enhanced",
+        "original_recipe_id": "77935",
+        "title": "Creamy Sweet Potato With Ginger Soup (Community Enhanced)",
+        "ingredients": [
+          "2 tablespoons olive oil",
+          "1.5 pounds peeled raw sweet potatoes, cut into 1-inch chunks",
+          "1 large onion, cut into large dice",
+          "1 tablespoon butter",
+          "1 pinch sugar",
+          "3 large garlic cloves, thickly sliced",
+          "1.5 teaspoons ground ginger",
+          "0.5 teaspoon ground nutmeg",
+          "0.125 teaspoon cayenne pepper",
+          "3 cups chicken broth, homemade or from a carton or can",
+          "2 cups chicken broth",
+          "Salt and freshly ground pepper, to taste",
+          "Garnish: chopped honey-roasted peanuts"
+        ],
+        "instructions": [
+          "Gather the ingredients.",
+          "Heat oil over medium-high heat in a large, deep saute pan until shimmering. Add sweet potatoes, then onion; saute, stirring very little at first, then more frequently, until vegetables start to turn golden brown, 7 to 8 minutes.",
+          "Reduce heat to low and add butter, sugar and garlic; continue cooking until all vegetables are a rich spotty caramel color, about 10 minutes longer.",
+          "Add ginger, nutmeg and cayenne pepper; continue to saute until fragrant, 30 seconds to 1 minute longer.",
+          "Add broth; bring to a simmer over medium-high heat. Reduce heat to low and simmer, partially covered, until sweet potatoes are tender, about 10 minutes.",
+          "Using an immersion blender or traditional blender, puree until very smooth, 30 seconds to 1 minute. (If using a traditional blender, vent it either by removing the lid&#39;s pop-out center or by lifting one edge of the lid. Drape the blender canister with a kitchen towel. To &#39;clean&#39; the canister, pour in a little half-and-half, blend briefly, then add to the soup.)",
+          "Return to pan (or a soup pot); add enough half-and-half so the mixture is souplike, yet thick enough to float garnish. Taste, and add salt and pepper if needed. Heat through, ladle into bowls, garnish and serve."
+        ],
+        "modifications_applied": [
+          {
+            "source_review": {
+              "text": "Def has a kick! Very thick.. Even w 2% milk- will use more broth next time. Used fresh grated ginger. Hearty and yummy!",
+              "reviewer": null,
+              "rating": 4
+            },
+            "modification_type": "quantity_adjustment",
+            "reasoning": "To adjust the thickness of the soup and enhance the flavor",
+            "changes_made": [
+              {
+                "type": "ingredient",
+                "from_text": "1.5 cups half-and-half (or whole milk)",
+                "to_text": "2 cups chicken broth",
+                "operation": "replace"
+              }
+            ]
+          }
+        ],
+        "enhancement_summary": {
+          "total_changes": 1,
+          "change_types": [
+            "quantity_adjustment"
+          ],
+          "expected_impact": "To adjust the thickness of the soup and enhance the flavor"
+        },
+        "description": "Made with sweet potatoes and seasoned with ginger, nutmeg, and cayenne pepper, this creamy soup is topped with honey-roasted peanuts.",
+        "servings": "8",
+        "prep_time": null,
+        "cook_time": null,
+        "total_time": null,
+        "created_at": "2026-09-24T16:30:46.521121",
+        "pipeline_version": "1.0.0"
+      },
+      "packaging_checks": {
+        "ledger_preserved": true,
+        "content_preserved": true,
+        "count_matches_records": true,
+        "source_matches": true
+      }
+    }
+  ],
+  "summary": {
+    "extraction_returned": 2,
+    "semantic_reviews_pending": 2,
+    "extraction_screening_failed": 2,
+    "oracle_application_passed": 1,
+    "actual_application_passed": 2
+  }
+}

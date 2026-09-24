@@ -23,7 +23,8 @@ extractor, set `OPENAI_API_KEY` in the environment or ignored root `.env`:
 .venv/bin/python evaluation/run.py --live --case cookie_multi_change --output test_output/cookie.json
 ```
 
-Do not overwrite `evaluation/baseline.json` when comparing fixes. CLI exit codes:
+Do not overwrite `evaluation/baseline.json` (offline) or
+`evaluation/baseline_live.json` (first live run) when comparing fixes. CLI exit codes:
 `0` = all selected checks passed with no pending stages; `1` = measured failures;
 `2` = blocked/not-run extraction or pending semantic review, without other failures.
 Model text still needs human semantic review, so a live run does not claim full
@@ -96,17 +97,103 @@ Exit code **1**, intentionally exposing existing failures.
 | Short instruction span | **Fail:** exact temperature span is not applied; no change is recorded. Whole-line similarity blocks the edit. |
 | Absent ingredient | **Fail:** removes sunflower seeds when asked to remove absent pumpkin seeds. Ledger truthfully records a semantically wrong deletion. |
 
-## Fix priority after this checkpoint
+## Live baseline and completed semantic review
 
-1. Make application trustworthy: unique exact anchors/spans or stable line IDs;
-   reject ambiguous/wrong targets, validate operation payloads, and never count
-   no-ops as changes. These failures are reproduced without the model.
-2. With an API key, run the pinned cookie and soup reviews and complete the
-   semantic rubric. Then address measured extraction omissions, future-intent
-   handling, explicit unknown quantities, and ingredient/instruction consistency.
-   Do not attribute the historical saved-output omissions to this extractor yet.
-3. Add explicit applied/partial/rejected/no-tweaks outcomes and make the existing
-   runner's success criteria reflect them. Keep blocked live evaluation visible.
-4. Address featured-review selection and missing vote provenance before claiming
-   highest-voted behavior. This small evaluation intentionally does not measure
-   ranking, conflicting reviews, or broad generalization.
+Recorded in `baseline_live.json` on 2026-09-24 against commit `ce5a5a0`:
+
+```sh
+.venv/bin/python evaluation/run.py --live \
+  --case cookie_multi_change --case soup_tried_vs_planned \
+  --output evaluation/baseline_live.json
+```
+
+Both requests succeeded on their first attempt. Requested model:
+`gpt-3.5-turbo`; returned model: `gpt-3.5-turbo-0125`. Both finish reasons were
+`stop`, not token-limit truncation. The exact requests, responses, proposals,
+transitions, and enhanced recipes are retained. Pipeline, prompt, evaluator,
+fixture, and input hashes match the offline baseline. No production or
+evaluation logic was changed for this run.
+
+Exit code was **1**: both extraction screenings failed; both application audits
+passed. The raw report's `semantic_reviews_pending: 2` records the evaluator's
+state at generation time. **The manual review is now complete below**; the raw
+report has not been edited to replace or conceal automated results.
+
+### Cookie: incomplete extraction, faithful application
+
+| Expected behavior | Model proposal | Actual output / manual verdict |
+| --- | --- | --- |
+| White sugar: 1 -> 0.5 cup | Replace with `1/2 cup white sugar` | Applied correctly; equivalent fraction accepted. |
+| Brown sugar: 1 -> 1.5 cups | Replace with `1 1/2 cups packed brown sugar` | Applied correctly. |
+| Remove water and its dependent instruction; retain baking soda | No edit | **Fail:** `2 teaspoons hot water` and “Dissolve baking soda in hot water” remain. Baking soda is retained. |
+| Add 1 tsp cream of tartar and incorporate into batter | No edit | **Fail:** absent from both ingredients and instructions. |
+| Chill at least an hour before scooping/baking | No edit | **Fail:** no chilling step. |
+| Preserve unrelated content; do not add another review's yolk | No unrelated edit | Pass: every other ingredient, all nine instructions, and servings are unchanged. |
+
+Only two ingredient lines changed. Both change records accurately describe the
+actual before/after lines. Automated screening passes 4 of 9 checks, including
+two preservation checks; **that is not modification recall**. The omitted
+changes are missing from the raw response itself, establishing an extraction
+failure in this live run, not a lost edit in application.
+
+The model also claims a “sweeter cookie.” The review does not report increased
+sweetness, and total sugar volume remains two cups. This rationale is unsupported
+by the supplied evidence; actual sensory effects were not tested. It is copied
+into the enhanced recipe's `expected_impact`, and the regex checks do not catch it.
+
+### Soup: unsupported edit, faithful application
+
+| Expected behavior | Model proposal | Actual output / manual verdict |
+| --- | --- | --- |
+| Recognize tried 2% milk substitution; update dairy directions | No supported milk edit | **Fail:** removes `1.5 cups half-and-half (or whole milk)` and substitutes `2 cups chicken broth`. Both instructions mentioning half-and-half remain. |
+| Recognize tried fresh grated ginger | No edit | **Fail:** `1.5 teaspoons ground ginger` remains. |
+| Do not apply “more broth next time” | Introduces `2 cups chicken broth` | **Fail:** original 3-cup broth line remains too; the ingredient list now contains 5 cups across two lines. Neither dairy-to-broth substitution nor the extra 2-cup amount is supported by the review. |
+| Surface missing fresh-ginger quantity and milk-volume assumptions | No ambiguity/assumption annotation | **Fail:** omits both supported substitutions and gives no account of unknown quantities. No fresh-ginger conversion was proposed; do not misdescribe this as an invented ginger amount. |
+| Preserve unrelated content or return needs-clarification | Returns an enhanced recipe | Fail overall: the unsupported dairy replacement is applied without qualification; all other ingredient lines and all seven instruction lines are unchanged. |
+
+There is exactly one proposed edit and one actual ingredient replacement, with a
+truthful change record. This is an **extraction/grounding failure**, followed by
+successful mechanical application of the wrong plan. The future-only broth
+suggestion was not respected as a constraint. The model's internal reasoning
+for choosing “2 cups” is unknown.
+
+**Automated blind spot:** `broth_unchanged` passes because it only checks that the
+original 3-cup line still exists. It does not detect a second broth entry. Thus
+the reported 1/5 passing checks overstates compliance with that expectation;
+manual review rejects it. Expectations/checks were not rewritten after seeing
+this output. A follow-up should compare all broth entries/quantities and detect
+unexpected ingredient additions and ingredient/instruction contradictions.
+
+### Combined interpretation and fix priority
+
+All three live change records are truthful; both final recipes match their
+proposals exactly, and all packaging checks pass. That does **not** make either
+recipe correct. The offline capitalization, short-span, and wrong-ingredient
+failures still demonstrate separate application defects. The cookie oracle
+proves the existing modifier can apply one complete, carefully anchored plan.
+
+1. **Make application trustworthy:** unique exact anchors/spans or stable line
+   IDs; reject ambiguous/wrong targets and invalid payloads; never report a
+   no-op as an applied change. Explicitly distinguish applied, rejected,
+   partial, and no-tweaks outcomes. The three offline failures are deterministic
+   regression cases and a focused first fix.
+2. **Extract complete, evidence-backed changes before planning edits:** retain
+   every discrete tried change, its source phrase, and any unknown quantity;
+   distinguish tried actions from future intent. The cookie omitted three
+   substantive changes; soup missed both tried substitutions and invented a
+   replacement/amount. One top-level category must not collapse a mixed review.
+   Do not assume a prompt tweak or model upgrade alone resolves this.
+3. **Validate the complete recipe and its explanation:** synchronize dependent
+   directions, flag unsupported additions/quantities and duplicate ingredients,
+   and ground reasoning in the review. Strengthen the broth invariant and add
+   checks for ordering and unsupported rationales. The existing runner should
+   not call an incomplete or contradictory recipe successful merely because an
+   object was returned. Preserve the baseline artifacts when improving checks.
+4. **Then expand coverage and address selection:** rerun fixed cases plus new
+   reviews and repeated live trials, retaining intermediate outputs. Resolve
+   featured-review ranking and missing vote provenance before claiming
+   highest-voted behavior.
+
+These two live responses establish concrete failures, not their frequency,
+general extraction accuracy, or culinary outcomes. The historical sample
+outputs remain separate evidence with uncertain generating-code provenance.
