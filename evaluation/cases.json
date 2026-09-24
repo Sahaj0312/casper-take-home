@@ -1,0 +1,290 @@
+{
+  "expectations_version": 1,
+  "authored_before_new_model_calls": true,
+  "cases": [
+    {
+      "id": "cookie_multi_change",
+      "recipe_file": "data/recipe_10813_best-chocolate-chip-cookies.json",
+      "review_text": "These are awesome cookies. I followed the advice of others by making the following tweaks: (1) I used a half cup of sugar and one-and-a-half cups of brown sugar; (2) I omitted the water; (3) I added a teaspoon of cream of tartar to the batter; (4) I refrigerated the batter for at least an hour before scooping and baking. The cookies retained their shape and didn't spread when baked. I think the cream of tartar made a difference, and the cookies did not come out too cakey either! This recipe is going in my \"favorites\" cookbook.",
+      "expected_behavior": [
+        "White sugar: 1 cup -> 0.5 cup.",
+        "Packed brown sugar: 1 cup -> 1.5 cups.",
+        "Remove 2 teaspoons hot water AND the instruction to dissolve baking soda in water; retain baking soda.",
+        "Add 1 teaspoon cream of tartar AND incorporate it into the batter instructions.",
+        "Chill batter for at least 1 hour before scooping/baking.",
+        "Preserve unrelated ingredients, directions, temperature, and serving metadata. No extra yolk: that belongs to another review."
+      ],
+      "oracle_note": "One acceptable complete edit plan, authored from source text. Exact wording is a deterministic application fixture, not the only acceptable LLM answer. Six edits implement five ingredient/technique changes plus dependent instruction updates. No culinary outcome is asserted.",
+      "oracle_edits": [
+        {
+          "target": "ingredients",
+          "operation": "replace",
+          "find": "1 cup white sugar",
+          "replace": "0.5 cup white sugar"
+        },
+        {
+          "target": "ingredients",
+          "operation": "replace",
+          "find": "1 cup packed brown sugar",
+          "replace": "1.5 cups packed brown sugar"
+        },
+        {
+          "target": "ingredients",
+          "operation": "remove",
+          "find": "2 teaspoons hot water"
+        },
+        {
+          "target": "ingredients",
+          "operation": "add_after",
+          "find": "1 teaspoon baking soda",
+          "add": "1 teaspoon cream of tartar"
+        },
+        {
+          "target": "instructions",
+          "operation": "replace",
+          "find": "Dissolve baking soda in hot water. Add to batter along with salt.",
+          "replace": "Add baking soda, salt, and cream of tartar to the batter."
+        },
+        {
+          "target": "instructions",
+          "operation": "add_after",
+          "find": "Stir in flour, chocolate chips, and walnuts.",
+          "add": "Refrigerate the batter for at least 1 hour before scooping and baking."
+        }
+      ],
+      "expected_content": {
+        "ingredients": [
+          "1 cup butter, softened",
+          "0.5 cup white sugar",
+          "1.5 cups packed brown sugar",
+          "2 eggs",
+          "2 teaspoons vanilla extract",
+          "1 teaspoon baking soda",
+          "1 teaspoon cream of tartar",
+          "0.5 teaspoon salt",
+          "3 cups all-purpose flour",
+          "2 cups semisweet chocolate chips",
+          "1 cup chopped walnuts"
+        ],
+        "instructions": [
+          "Gather your ingredients, making sure your butter is softened, and your eggs are room temperature.",
+          "Preheat the oven to 350 degrees F (175 degrees C). Beat butter, white sugar, and brown sugar with an electric mixer in a large bowl until smooth.",
+          "Beat in eggs, one at a time, then stir in vanilla.",
+          "Add baking soda, salt, and cream of tartar to the batter.",
+          "Stir in flour, chocolate chips, and walnuts.",
+          "Refrigerate the batter for at least 1 hour before scooping and baking.",
+          "Drop spoonfuls of dough 2 inches apart onto ungreased baking sheets.",
+          "Bake in the preheated oven until edges are nicely browned, about 10 minutes.",
+          "Cool on the baking sheets briefly before removing to a wire rack to cool completely.",
+          "Store in an airtight container or serve immediately and enjoy!"
+        ]
+      },
+      "checks": [
+        {
+          "id": "white_sugar",
+          "target": "ingredients",
+          "pattern": "(?:0?\\.5|1/2|½|half)\\s*(?:a\\s+)?cups?\\s+(?:of\\s+)?white sugar"
+        },
+        {
+          "id": "brown_sugar",
+          "target": "ingredients",
+          "pattern": "(?:1\\.5|1\\s+1/2|1½|one.and.a.half)\\s*cups?\\s+(?:of\\s+)?(?:packed\\s+)?brown sugar"
+        },
+        {
+          "id": "water_ingredient_removed",
+          "target": "ingredients",
+          "pattern": "water",
+          "absent": true
+        },
+        {
+          "id": "water_instruction_removed",
+          "target": "instructions",
+          "pattern": "hot water|dissolve.*water",
+          "absent": true
+        },
+        {
+          "id": "baking_soda_retained",
+          "target": "ingredients",
+          "pattern": "1 teaspoon baking soda"
+        },
+        {
+          "id": "tartar_added",
+          "target": "ingredients",
+          "pattern": "(?:1|one|a)\\s*(?:teaspoon|tsp)\\.?\\s+(?:of\\s+)?cream of tartar"
+        },
+        {
+          "id": "tartar_incorporated",
+          "target": "instructions",
+          "pattern": "cream of tartar"
+        },
+        {
+          "id": "chill_duration",
+          "target": "instructions",
+          "pattern": "(?:refrigerat|chill)[^\\n]*(?:1\\s*hour|one\\s*hour|an\\s*hour|60\\s*minutes)"
+        },
+        {
+          "id": "no_unrelated_yolk",
+          "target": "ingredients",
+          "pattern": "yolk",
+          "absent": true
+        }
+      ]
+    },
+    {
+      "id": "soup_tried_vs_planned",
+      "recipe_file": "data/recipe_77935_creamy-sweet-potato-with-ginger-soup.json",
+      "review_text": "Def has a kick! Very thick.. Even w 2% milk- will use more broth next time. Used fresh grated ginger. Hearty and yummy!",
+      "expected_behavior": [
+        "Recognize 2% milk as used, not a future plan; replace half-and-half/whole-milk references consistently.",
+        "Recognize fresh grated ginger as used, replacing ground ginger.",
+        "Do NOT increase broth: \"will use more broth next time\" is untested future intent.",
+        "No fresh ginger quantity was supplied. Surface that ambiguity; do not claim a numerical ground-to-fresh conversion is reviewer evidence. Retaining a recipe quantity must be labeled an assumption.",
+        "Milk volume was not supplied. Keeping the original volume is an explicit assumption, not a measured amount from the review.",
+        "Preserve unrelated recipe content. An unresolved/needs-clarification result is acceptable if the supported tweaks and missing quantities are retained."
+      ],
+      "checks": [
+        {
+          "id": "milk_identified",
+          "target": "ingredients",
+          "pattern": "2\\s*%\\s*milk"
+        },
+        {
+          "id": "fresh_ginger_identified",
+          "target": "ingredients",
+          "pattern": "fresh.*ginger"
+        },
+        {
+          "id": "ground_ginger_removed",
+          "target": "ingredients",
+          "pattern": "ground ginger",
+          "absent": true
+        },
+        {
+          "id": "milk_directions_consistent",
+          "target": "instructions",
+          "pattern": "half-and-half|whole milk",
+          "absent": true
+        },
+        {
+          "id": "broth_unchanged",
+          "target": "ingredients",
+          "exact_line": "3 cups chicken broth, homemade or from a carton or can"
+        }
+      ]
+    },
+    {
+      "id": "jam_no_tweaks",
+      "recipe_file": "data/recipe_284494_spiced-purple-plum-jam.json",
+      "review_text": null,
+      "expected_behavior": [
+        "Do not call the LLM; do not edit or fabricate tweaks.",
+        "Treat absence of tweaks as a valid skip. Current API returns None, which is accepted for this baseline; an explicit skip status is a later improvement."
+      ]
+    },
+    {
+      "id": "case_variant",
+      "recipe": {
+        "recipe_id": "case_variant",
+        "title": "Carrot salad",
+        "ingredients": [
+          "2 tablespoons lemon juice",
+          "1 cup grated carrots"
+        ],
+        "instructions": [
+          "Toss carrots with lemon juice."
+        ]
+      },
+      "review_text": "I used 1 tablespoon lemon juice instead of 2.",
+      "expected_behavior": [
+        "Case-insensitive matching must perform the replacement it accepts; never report an unchanged line as changed."
+      ],
+      "oracle_edits": [
+        {
+          "target": "ingredients",
+          "operation": "replace",
+          "find": "2 Tablespoons Lemon Juice",
+          "replace": "1 tablespoon lemon juice"
+        }
+      ],
+      "expected_content": {
+        "ingredients": [
+          "1 tablespoon lemon juice",
+          "1 cup grated carrots"
+        ],
+        "instructions": [
+          "Toss carrots with lemon juice."
+        ]
+      },
+      "oracle_note": "Hand-written adversarial proposal, not model output. Run only as an isolated application case."
+    },
+    {
+      "id": "short_instruction_span",
+      "recipe": {
+        "recipe_id": "short_instruction_span",
+        "title": "Roasted carrots",
+        "ingredients": [
+          "2 cups carrots"
+        ],
+        "instructions": [
+          "Spread carrots evenly on a lined tray and roast at 200 C for 25 minutes, turning once halfway through cooking."
+        ]
+      },
+      "review_text": "I roasted at 220 C instead of 200 C; everything else was the same.",
+      "expected_behavior": [
+        "Replace the unique exact temperature span and preserve the rest of the instruction."
+      ],
+      "oracle_edits": [
+        {
+          "target": "instructions",
+          "operation": "replace",
+          "find": "200 C",
+          "replace": "220 C"
+        }
+      ],
+      "expected_content": {
+        "ingredients": [
+          "2 cups carrots"
+        ],
+        "instructions": [
+          "Spread carrots evenly on a lined tray and roast at 220 C for 25 minutes, turning once halfway through cooking."
+        ]
+      },
+      "oracle_note": "Hand-written adversarial proposal, not model output. Run only as an isolated application case."
+    },
+    {
+      "id": "wrong_ingredient_removal",
+      "recipe": {
+        "recipe_id": "wrong_ingredient_removal",
+        "title": "Sunflower oat topping",
+        "ingredients": [
+          "1 cup sunflower seeds",
+          "2 cups rolled oats"
+        ],
+        "instructions": [
+          "Mix seeds and oats."
+        ]
+      },
+      "review_text": "I left out the pumpkin seeds.",
+      "expected_behavior": [
+        "Pumpkin seeds are absent. Reject/skip the edit; do not remove similar-looking sunflower seeds. This deliberately invalid proposal isolates application behavior."
+      ],
+      "oracle_edits": [
+        {
+          "target": "ingredients",
+          "operation": "remove",
+          "find": "1 cup pumpkin seeds"
+        }
+      ],
+      "expected_content": {
+        "ingredients": [
+          "1 cup sunflower seeds",
+          "2 cups rolled oats"
+        ],
+        "instructions": [
+          "Mix seeds and oats."
+        ]
+      },
+      "oracle_note": "Hand-written adversarial proposal, not model output. Run only as an isolated application case."
+    }
+  ]
+}
