@@ -261,5 +261,8 @@ confirms unchanged cookie content and unchanged soup content, with the soup
 false pass now corrected (0/5 screening checks pass). No extractor or prompt
 changes, live calls, or baseline rewrites were made in this checkpoint.
 
-Next: fix evidence-backed extraction completeness and tried-versus-planned
-handling, then validate dependent instructions and unsupported quantities.
+That editor checkpoint is preserved above. The subsequent extraction fixes,
+GPT-6 Luna live outputs, manual review, costs, limitations, and rerun commands
+are in [extraction_findings.md](extraction_findings.md). The new comparison is
+[extraction_comparison.json](extraction_comparison.json); the original baselines
+remain unchanged.

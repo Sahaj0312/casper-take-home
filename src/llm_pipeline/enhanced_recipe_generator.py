@@ -135,14 +135,30 @@ class EnhancedRecipeGenerator:
         modification_applied = self.create_modification_applied(
             modification, source_review, change_records
         )
-        modifications_applied = [modification_applied]
+        modifications_applied = [modification_applied] if change_records else []
 
         # Calculate enhancement summary
         enhancement_summary = self.calculate_enhancement_summary(modifications_applied)
+        status = "enhanced" if change_records else "no_applicable_changes"
+        if modification.analysis is not None:
+            deferred = any(c.disposition == "needs_clarification" for c in modification.analysis.changes)
+            if deferred:
+                status = "partial" if change_records else "needs_clarification"
+            enhancement_summary.change_types = sorted({
+                c.modification_type for c in modification.analysis.changes
+                if c.disposition == "apply" and change_records
+            })
+            outcome = modification.analysis.outcome_evidence
+            enhancement_summary.expected_impact = (
+                f'Reviewer reported (not independently verified): "{outcome}"'
+                if outcome and change_records else "No benefit established by this pipeline."
+            )
 
         # Generate enhanced recipe ID and title
         enhanced_recipe_id = f"{original_recipe.recipe_id}_enhanced"
-        enhanced_title = f"{original_recipe.title} (Community Enhanced)"
+        suffix = {"enhanced": "Community Enhanced", "partial": "Partially Enhanced",
+                  "needs_clarification": "Needs Clarification", "no_applicable_changes": "No Applicable Changes"}[status]
+        enhanced_title = f"{original_recipe.title} ({suffix})"
 
         # Create the enhanced recipe
         enhanced_recipe = EnhancedRecipe(
@@ -153,6 +169,9 @@ class EnhancedRecipeGenerator:
             instructions=modified_recipe.instructions,
             modifications_applied=modifications_applied,
             enhancement_summary=enhancement_summary,
+            review_analysis=modification.analysis,
+            edit_sources=modification.edit_sources,
+            enhancement_status=status,
             description=original_recipe.description,
             servings=original_recipe.servings,
             prep_time=getattr(original_recipe, "prep_time", None),

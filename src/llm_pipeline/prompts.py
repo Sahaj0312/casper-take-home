@@ -1,225 +1,86 @@
-"""
-LLM prompts and examples for recipe modification extraction.
+"""Small, evidence-focused prompts used for one review or one change at a time."""
 
-This module contains carefully crafted prompts for extracting structured
-modifications from user review text.
-"""
+import json
 
-SYSTEM_PROMPT = """You are an expert recipe analyst. Your job is to extract structured recipe modifications from user reviews.
+from .grounding import ingredient_names
 
-When a user shares their experience modifying a recipe, you need to:
-1. Identify exactly what changes they made
-2. Understand why they made those changes
-3. Convert their modifications into structured edit operations
+INVENTORY_SYSTEM = """Extract recipe changes from the full reviewer text. Return JSON only.
+Categories: ingredient_substitution, quantity_adjustment, technique_change, addition, removal.
+Each changed ingredient or technique needs its own entry. Split compound sentences
+and numbered items into ALL discrete changes, even when one item changes two
+ingredients. Quote tried and future clauses separately; never merge them. Copy evidence directly
+from the statement, without adding words. Disposition is apply for actual,
+sufficiently specified changes; needs_clarification for actual changes missing
+necessary details; future_plan for untried intentions. Never turn an opinion
+('too thick', 'delicious') into a change. No changes means changes: [].
+A substitution without an amount needs clarification. Do not inherit an amount
+from the recipe. Milk fat percentage is not a volume. 'With X' / 'w X' reports
+using X, not replacing X with something else. Technique changes include chilling,
+resting, flattening, temperature, timing and portioning. Do not omit these.
+Amount is null unless the statement supplies one; amount_evidence must be an
+exact quote supporting it. Equivalent number notation is allowed, no unit
+conversions. Clarification must ask about missing facts, not suggest new changes.
+Do not invent quantities, motives or benefits. Optional outcome_evidence must be
+one exact quote about the reviewer's observed result. Null is fine."""
 
-You must output valid JSON that matches the ModificationObject schema.
-
-Categories:
-- "ingredient_substitution": Replacing one ingredient with another
-- "quantity_adjustment": Changing amounts of existing ingredients
-- "technique_change": Altering cooking method, temperature, time
-- "addition": Adding new ingredients or steps
-- "removal": Removing ingredients or steps
-
-Edit operations:
-- "replace": Find existing text and replace it
-- "add_after": Add new text after finding target text
-- "remove": Remove text that matches the find pattern
-
-Be precise with text matching - use the exact text from the original recipe when possible."""
-
-EXTRACTION_PROMPT = """Original Recipe:
-Title: {title}
-Ingredients: {ingredients}
-Instructions: {instructions}
-
-User Review: "{review_text}"
-
-Extract the recipe modifications from this review. The user has made changes to improve the recipe.
-
-Output a JSON object with this structure:
-{{
-    "modification_type": "quantity_adjustment|ingredient_substitution|technique_change|addition|removal",
-    "reasoning": "Brief explanation of why this modification improves the recipe",
-    "edits": [
-        {{
-            "target": "ingredients|instructions",
-            "operation": "replace|add_after|remove",
-            "find": "exact text to find",
-            "replace": "replacement text (for replace operations)",
-            "add": "text to add (for add_after operations)"
-        }}
-    ]
-}
-
-Focus on concrete changes the user actually made, not general suggestions."""
-
-FEW_SHOT_EXAMPLES = [
-    {
-        "review": "I used a half cup of sugar and one-and-a-half cups of brown sugar instead of the recipe amounts. Made the cookies much more chewy and flavorful!",
-        "ingredients": [
-            "1 cup butter, softened",
-            "1 cup white sugar",
-            "1 cup packed brown sugar",
-            "2 eggs",
-        ],
-        "expected_output": {
-            "modification_type": "quantity_adjustment",
-            "reasoning": "Makes cookies more chewy and flavorful by increasing brown sugar ratio",
-            "edits": [
-                {
-                    "target": "ingredients",
-                    "operation": "replace",
-                    "find": "1 cup white sugar",
-                    "replace": "0.5 cup white sugar",
-                },
-                {
-                    "target": "ingredients",
-                    "operation": "replace",
-                    "find": "1 cup packed brown sugar",
-                    "replace": "1.5 cups packed brown sugar",
-                },
-            ],
-        },
-    },
-    {
-        "review": "I added a teaspoon of cream of tartar to the batter and omitted the water. The cookies retained their shape and didn't spread when baked.",
-        "ingredients": [
-            "1 teaspoon baking soda",
-            "2 teaspoons hot water",
-            "0.5 teaspoon salt",
-        ],
-        "expected_output": {
-            "modification_type": "addition",
-            "reasoning": "Helps cookies retain shape and prevents spreading during baking",
-            "edits": [
-                {
-                    "target": "ingredients",
-                    "operation": "add_after",
-                    "find": "0.5 teaspoon salt",
-                    "add": "1 teaspoon cream of tartar",
-                },
-                {
-                    "target": "ingredients",
-                    "operation": "remove",
-                    "find": "2 teaspoons hot water",
-                },
-            ],
-        },
-    },
-    {
-        "review": "I used 1 tsp of salt instead of 1/2 tsp and omitted the nuts. Much better flavor without being too salty.",
-        "ingredients": ["0.5 teaspoon salt", "1 cup chopped walnuts"],
-        "expected_output": {
-            "modification_type": "quantity_adjustment",
-            "reasoning": "Improves flavor balance without making cookies too salty",
-            "edits": [
-                {
-                    "target": "ingredients",
-                    "operation": "replace",
-                    "find": "0.5 teaspoon salt",
-                    "replace": "1 teaspoon salt",
-                },
-                {
-                    "target": "ingredients",
-                    "operation": "remove",
-                    "find": "1 cup chopped walnuts",
-                },
-            ],
-        },
-    },
-    {
-        "review": "I baked them at 375 degrees instead of 350 for about 8-9 minutes. They came out perfectly crispy on the edges.",
-        "instructions": [
-            "Preheat the oven to 350 degrees F (175 degrees C)",
-            "Bake in the preheated oven until edges are nicely browned, about 10 minutes",
-        ],
-        "expected_output": {
-            "modification_type": "technique_change",
-            "reasoning": "Higher temperature and shorter time creates crispier edges",
-            "edits": [
-                {
-                    "target": "instructions",
-                    "operation": "replace",
-                    "find": "350 degrees F",
-                    "replace": "375 degrees F",
-                },
-                {
-                    "target": "instructions",
-                    "operation": "replace",
-                    "find": "about 10 minutes",
-                    "replace": "about 8-9 minutes",
-                },
-            ],
-        },
-    },
-]
+PLANNING_SYSTEM = """Return the complete recipe after applying ONE supported change.
+Output JSON with ingredients (array of strings) and instructions (array of strings).
+Do not output edit operations. Preserve every unrelated ingredient and action.
+Update ingredient AND directions for ingredient additions/removals/substitutions.
+When removing an ingredient from a multi-action step, preserve other actions.
+For example, if a step says 'Dissolve X in Y. Add to the mixture with Z', and
+ONLY Y is omitted, rewrite it as 'Add X and Z to the mixture.' Do not discard X
+or keep telling the cook to use Y. This is a general preservation rule, not a
+new recipe change. All retained ingredients must still be incorporated.
+Add an instruction explaining where to incorporate any added ingredient.
+Place new technique steps before the actions they must precede.
+An amount change does NOT add another use of the ingredient. Keep instructions
+unchanged unless an existing stated amount needs updating. Never add the same
+ingredient twice. A step described as 'before X' belongs immediately before X,
+after the preceding preparation is complete (e.g. fully mix a batter before
+chilling it for portioning). Do not move that step ahead of earlier preparation.
+Use only quantities provided by the supporting statement, or retain unchanged
+original quantities. Equivalent written fractions are allowed. No new quantities,
+benefits, or commentary. Add new lines after an existing line, never at the start.
+Do not apply any other change from the review."""
 
 
-def build_few_shot_prompt(
-    review_text: str, title: str, ingredients: list, instructions: list
-) -> str:
-    """Build a few-shot prompt with examples for better extraction accuracy."""
+def inventory_prompt(review_text, title, ingredients, instructions, context=None):
+    return f"""Recipe: {title}
+Ingredients: {json.dumps(ingredients, ensure_ascii=False)}
+Instructions: {json.dumps(instructions, ensure_ascii=False)}
 
-    examples_text = "\n\n".join(
-        [
-            f"Example {i + 1}:\n"
-            f'Review: "{example["review"]}"\n'
-            f"Output: {example['expected_output']}"
-            for i, example in enumerate(
-                FEW_SHOT_EXAMPLES[:2]
-            )  # Use 2 most relevant examples
-        ]
-    )
+Classify ALL changes in this reviewer statement:
+{review_text}
 
-    prompt = f"""{SYSTEM_PROMPT}
+Return this shape (null for unavailable optional values):
+{{"changes":[{{"id":"c1","modification_type":"technique_change","summary":"neutral description","evidence":"exact substring of the statement","disposition":"apply","amount":null,"amount_evidence":null,"clarification":null}}],"outcome_evidence":null}}
 
-Here are some examples of how to extract modifications:
-
-{examples_text}
-
-Now extract from this review:
-
-{
-        EXTRACTION_PROMPT.format(
-            title=title,
-            ingredients=ingredients,
-            instructions=instructions,
-            review_text=review_text,
-        )
-    }"""
-
-    return prompt
+Examples of classification:
+"I let the dough rest for two hours" -> technique_change, apply.
+"I used skim milk" -> ingredient_substitution, needs_clarification: how much milk?
+"Next time I will add honey" -> addition, future_plan, never apply.
+"Too thick" -> no change; do not ask how the user wants to change it.
+These examples are not edits to the recipe. Analyze the reviewer statement above."""
 
 
-def build_simple_prompt(
-    review_text: str, title: str, ingredients: list, instructions: list
-) -> str:
-    """Build a simple prompt without examples for faster processing."""
-    return f"""{SYSTEM_PROMPT}
+def planning_prompt(review_text, recipe, analysis):
+    dependencies = []
+    if analysis.changes[0].modification_type in ("removal", "ingredient_substitution"):
+        names = ingredient_names(recipe.ingredients)
+        for step in recipe.instructions:
+            used = sorted(name for name in names if name in step.lower())
+            if len(used) > 1:
+                dependencies.append({"step": step, "ingredients_used": used})
+    return f"""Original recipe:
+{json.dumps({"ingredients": recipe.ingredients, "instructions": recipe.instructions}, ensure_ascii=False)}
 
-Original Recipe:
-Title: {title}
-Ingredients: {ingredients}
-Instructions: {instructions}
+Apply ONLY this supported change:
+{json.dumps(analysis.changes[0].model_dump(), ensure_ascii=False)}
 
-User Review: "{review_text}"
-
-Extract the recipe modifications from this review. The user has made changes to improve the recipe.
-
-Output a JSON object with this structure:
-{{
-    "modification_type": "quantity_adjustment|ingredient_substitution|technique_change|addition|removal",
-    "reasoning": "Brief explanation of why this modification improves the recipe",
-    "edits": [
-        {{
-            "target": "ingredients|instructions",
-            "operation": "replace|add_after|remove",
-            "find": "exact text to find",
-            "replace": "replacement text (for replace operations)",
-            "add": "text to add (for add_after operations)"
-        }}
-    ]
-}}
-
-Focus on concrete changes the user actually made, not general suggestions."""
+Return the entire updated recipe as {{"ingredients":[...],"instructions":[...]}}.
+Preserve unrelated content. Update the dependent instructions too.
+Original multi-ingredient step dependencies: {json.dumps(dependencies)}
+For each affected step, REMOVE the omitted ingredient's use but explicitly
+INCORPORATE EVERY OTHER listed ingredient in the rewritten step. Do not delete
+a whole action and lose the other ingredients. Do not restore the omitted ingredient."""

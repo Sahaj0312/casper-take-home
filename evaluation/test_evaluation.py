@@ -3,7 +3,6 @@
 import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -61,16 +60,14 @@ class EvaluationTests(unittest.TestCase):
             "edits": [{"target": "ingredients", "operation": "replace",
                        "find": "1 cup white sugar", "replace": "0.5 cup white sugar"}],
         }
-        response = SimpleNamespace(
-            choices=[SimpleNamespace(message=SimpleNamespace(content=json.dumps(proposal)))],
-            model_dump=lambda **kwargs: {"test_double": True, "content": json.dumps(proposal)},
-        )
+        from llm_pipeline.models import ModificationObject
         with TemporaryDirectory() as directory, patch(
-            "openai.resources.chat.completions.Completions.create", return_value=response
-        ) as create:
+            "llm_pipeline.tweak_extractor.TweakExtractor.extract_modification",
+            return_value=ModificationObject(**proposal),
+        ) as extract:
             result = evaluate_case(CASES[0], True, "offline-test-key", directory)
-        self.assertEqual(create.call_count, 1)
-        self.assertIn(CASES[0]["review_text"], create.call_args.kwargs["messages"][0]["content"])
+        self.assertEqual(extract.call_count, 1)
+        self.assertEqual(extract.call_args.args[0].text, CASES[0]["review_text"])
         self.assertEqual(result["extraction"]["proposal"], proposal)
         application = result["actual_application"]
         self.assertEqual(application["status"], "passed")

@@ -2,6 +2,7 @@
 """Evaluate the existing pipeline without modifying production code."""
 
 import argparse
+import copy
 from collections import Counter
 from datetime import datetime, timezone
 from difflib import unified_diff
@@ -248,7 +249,7 @@ def evaluate_case(case, live, api_key, output_dir, replay_case=None):
     real_apply = pipeline.recipe_modifier.apply_modification
 
     def capture_request(**kwargs):
-        attempt = {"request": kwargs}
+        attempt = {"request": copy.deepcopy(kwargs)}
         extraction["attempts"].append(attempt)
         if case["review_text"] is None or replay_case is not None:
             raise AssertionError("offline case attempted an LLM request")

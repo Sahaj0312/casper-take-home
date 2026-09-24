@@ -61,45 +61,36 @@ Enhanced recipes are saved in `src/data/enhanced/`:
 
 Original scraped recipes in `data/` directory contain reviews with `has_modification: true` flags. Enhanced recipes include:
 
-```json
-{
-  "recipe_id": "10813_enhanced",
-  "title": "Best Chocolate Chip Cookies (Community Enhanced)",
-  "ingredients": ["1 cup butter", "1 additional egg yolk", ...],
-  "modifications_applied": [
-    {
-      "source_review": {
-        "text": "I added an extra egg yolk for chewier texture",
-        "rating": 5
-      },
-      "modification_type": "addition",
-      "reasoning": "Improves texture and chewiness",
-      "changes_made": [...]
-    }
-  ],
-  "enhancement_summary": {
-    "total_changes": 1,
-    "change_types": ["addition"],
-    "expected_impact": "Chewier texture and improved consistency"
-  }
-}
-```
+The output contains the recipe, actual edit records, source review, and
+`review_analysis`: every extracted change has literal evidence and an `apply`,
+`future_plan`, or `needs_clarification` disposition. `edit_sources` connects edits
+to those changes. `enhancement_status` distinguishes an enhanced recipe from one
+requiring clarification. Future plans and missing quantities are not applied.
 
 ## How It Works
 
-The LLM Analysis Pipeline processes recipes in 3 steps:
+1. **Extraction**: Select one flagged review (still random) and use **GPT-6 Luna**
+   to inventory all its changes in one call. Validate evidence, quantities, and
+   tried/future distinctions. API requests use Chat Completions, JSON mode,
+   `reasoning_effort="none"`, and a 3,000-token completion limit.
+2. **Planning and editing**: Plan each actionable change against the current
+   recipe, validate ingredient/instruction consistency, and compile actual
+   differences into unique literal edits. Invalid plans receive up to two
+   retries. An exhausted planning stage returns clarification with no edits.
+3. **Attribution**: Report only actual changes. Benefits are quoted reviewer
+   observations, explicitly unverified, rather than invented improvements.
 
-1. **Tweak Extraction**: Selects one random review with modifications and uses GPT-4o-mini to extract structured changes
-2. **Recipe Modification**: Applies edits to unique, case-insensitive literal targets; rejects missing/ambiguous targets and records only actual changes
-3. **Enhanced Recipe Generation**: Creates enhanced version with full citation tracking back to source review
-
-Each run produces one enhanced recipe per original recipe, with complete attribution showing exactly what changed and why.
+Missing substitution quantities are surfaced as questions; original volumes or
+conversion ratios are never silently inherited. Validators are conservative
+checks, not proof of semantic correctness. Manual output review remains necessary.
 
 ## Development
 
 For offline regression tests and saved-proposal replay, see
 [`evaluation/README.md`](evaluation/README.md). Original baseline reports are
-preserved separately from the editor-fix replay results.
+preserved separately from the editor replay and Luna results. See
+[`evaluation/extraction_findings.md`](evaluation/extraction_findings.md) for the
+latest comparison, limitations, and rerun commands.
 
 ```bash
 # Add dependencies

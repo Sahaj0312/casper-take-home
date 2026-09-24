@@ -1,0 +1,265 @@
+{
+  "before": {
+    "path": "evaluation/baseline_live.json",
+    "sha256": "88d71735ae781204c917b00000c403b73edef162f2291832775f2bb2c0af9bab",
+    "cases": [
+      {
+        "id": "cookie_multi_change",
+        "outcome": {
+          "passed": false,
+          "checks": {
+            "application_and_ledger": true,
+            "packaging": true,
+            "literal_evidence": false,
+            "original_nine_content_checks": false,
+            "five_applied_changes": false,
+            "all_changes_have_edits": true,
+            "no_extra_ingredients": true,
+            "unchanged_steps_preserved": false,
+            "ingredients_used_once": false,
+            "chill_after_mixing_before_scooping": false,
+            "benefit_is_attributed_quote": false
+          }
+        },
+        "calls": 1,
+        "usage": {
+          "prompt_tokens": 736,
+          "completion_tokens": 131
+        },
+        "models": [
+          "gpt-3.5-turbo-0125"
+        ],
+        "original_content_screen": {
+          "status": "failed",
+          "checks": [
+            {
+              "id": "white_sugar",
+              "passed": true
+            },
+            {
+              "id": "brown_sugar",
+              "passed": true
+            },
+            {
+              "id": "water_ingredient_removed",
+              "passed": false
+            },
+            {
+              "id": "water_instruction_removed",
+              "passed": false
+            },
+            {
+              "id": "baking_soda_retained",
+              "passed": true
+            },
+            {
+              "id": "tartar_added",
+              "passed": false
+            },
+            {
+              "id": "tartar_incorporated",
+              "passed": false
+            },
+            {
+              "id": "chill_duration",
+              "passed": false
+            },
+            {
+              "id": "no_unrelated_yolk",
+              "passed": true
+            }
+          ],
+          "note": "Heuristic screening only; complete the semantic review separately."
+        },
+        "manual_review": "See extraction_findings.md; automated checks do not prove general semantic correctness."
+      },
+      {
+        "id": "soup_tried_vs_planned",
+        "outcome": {
+          "passed": false,
+          "checks": {
+            "application_and_ledger": true,
+            "packaging": true,
+            "literal_evidence": false,
+            "clarify_2% milk": false,
+            "clarify_fresh grated ginger": false,
+            "broth_future_only": false,
+            "exactly_three_decisions": false,
+            "no_guessed_edits_or_claims": false,
+            "original_recipe_retained": false,
+            "single_original_broth_entry": false,
+            "explicit_clarification_status": false,
+            "no_invented_benefit": false
+          }
+        },
+        "calls": 1,
+        "usage": {
+          "prompt_tokens": 834,
+          "completion_tokens": 83
+        },
+        "models": [
+          "gpt-3.5-turbo-0125"
+        ],
+        "original_content_screen": {
+          "status": "failed",
+          "checks": [
+            {
+              "id": "milk_identified",
+              "passed": false
+            },
+            {
+              "id": "fresh_ginger_identified",
+              "passed": false
+            },
+            {
+              "id": "ground_ginger_removed",
+              "passed": false
+            },
+            {
+              "id": "milk_directions_consistent",
+              "passed": false
+            },
+            {
+              "id": "broth_unchanged",
+              "passed": true
+            }
+          ],
+          "note": "Heuristic screening only; complete the semantic review separately."
+        },
+        "manual_review": "See extraction_findings.md; automated checks do not prove general semantic correctness."
+      }
+    ]
+  },
+  "after": {
+    "path": "evaluation/luna_live.json",
+    "sha256": "b7d294b7ffd557732963736ca945ff7a66d2f42ceb02691218820f149f123d1a",
+    "cases": [
+      {
+        "id": "cookie_multi_change",
+        "outcome": {
+          "passed": true,
+          "checks": {
+            "application_and_ledger": true,
+            "packaging": true,
+            "literal_evidence": true,
+            "original_nine_content_checks": true,
+            "five_applied_changes": true,
+            "all_changes_have_edits": true,
+            "no_extra_ingredients": true,
+            "unchanged_steps_preserved": true,
+            "ingredients_used_once": true,
+            "chill_after_mixing_before_scooping": true,
+            "benefit_is_attributed_quote": true
+          }
+        },
+        "calls": 6,
+        "usage": {
+          "prompt_tokens": 4611,
+          "completion_tokens": 1515
+        },
+        "models": [
+          "gpt-6-luna"
+        ],
+        "original_content_screen": {
+          "status": "passed",
+          "checks": [
+            {
+              "id": "white_sugar",
+              "passed": true
+            },
+            {
+              "id": "brown_sugar",
+              "passed": true
+            },
+            {
+              "id": "water_ingredient_removed",
+              "passed": true
+            },
+            {
+              "id": "water_instruction_removed",
+              "passed": true
+            },
+            {
+              "id": "baking_soda_retained",
+              "passed": true
+            },
+            {
+              "id": "tartar_added",
+              "passed": true
+            },
+            {
+              "id": "tartar_incorporated",
+              "passed": true
+            },
+            {
+              "id": "chill_duration",
+              "passed": true
+            },
+            {
+              "id": "no_unrelated_yolk",
+              "passed": true
+            }
+          ],
+          "note": "Heuristic screening only; complete the semantic review separately."
+        },
+        "manual_review": "See extraction_findings.md; automated checks do not prove general semantic correctness."
+      },
+      {
+        "id": "soup_tried_vs_planned",
+        "outcome": {
+          "passed": true,
+          "checks": {
+            "application_and_ledger": true,
+            "packaging": true,
+            "literal_evidence": true,
+            "clarify_2% milk": true,
+            "clarify_fresh grated ginger": true,
+            "broth_future_only": true,
+            "exactly_three_decisions": true,
+            "no_guessed_edits_or_claims": true,
+            "original_recipe_retained": true,
+            "single_original_broth_entry": true,
+            "explicit_clarification_status": true,
+            "no_invented_benefit": true
+          }
+        },
+        "calls": 1,
+        "usage": {
+          "prompt_tokens": 930,
+          "completion_tokens": 211
+        },
+        "models": [
+          "gpt-6-luna"
+        ],
+        "original_content_screen": {
+          "status": "failed",
+          "checks": [
+            {
+              "id": "milk_identified",
+              "passed": false
+            },
+            {
+              "id": "fresh_ginger_identified",
+              "passed": false
+            },
+            {
+              "id": "ground_ginger_removed",
+              "passed": false
+            },
+            {
+              "id": "milk_directions_consistent",
+              "passed": false
+            },
+            {
+              "id": "broth_unchanged",
+              "passed": true
+            }
+          ],
+          "note": "Heuristic screening only; complete the semantic review separately."
+        },
+        "manual_review": "See extraction_findings.md; automated checks do not prove general semantic correctness."
+      }
+    ]
+  },
+  "note": "Original expectations allow clarification for missing soup quantities. Original raw content screens remain unchanged."
+}

@@ -7,7 +7,52 @@ and all intermediate data formats used throughout the pipeline.
 
 from typing import Any, Dict, List, Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
+
+
+ChangeType = Literal["ingredient_substitution", "quantity_adjustment", "technique_change", "addition", "removal"]
+
+
+class ReviewChange(BaseModel):
+    """One discrete change, including suggestions that must not become edits."""
+
+    id: str
+    modification_type: ChangeType
+    summary: str
+    evidence: str = Field(min_length=1, description="Exact supporting quote from the review")
+    disposition: Literal["apply", "needs_clarification", "future_plan"]
+    amount: Optional[str] = None
+    amount_evidence: Optional[str] = None
+    clarification: Optional[str] = None
+
+    @model_validator(mode="after")
+    def require_details(self):
+        if self.disposition == "needs_clarification" and not self.clarification:
+            raise ValueError("Deferred changes need a clarification question")
+        return self
+
+
+class ReviewAnalysis(BaseModel):
+    changes: List[ReviewChange]
+    outcome_evidence: Optional[str] = None
+
+
+class GroundedEdit(BaseModel):
+    target: Literal["ingredients", "instructions"]
+    operation: Literal["replace", "add_after", "remove"]
+    find: str
+    replace: Optional[str] = None
+    add: Optional[str] = None
+    change_ids: List[str] = Field(min_length=1)
+
+
+class EditPlan(BaseModel):
+    edits: List[GroundedEdit]
+
+
+class RecipeDraft(BaseModel):
+    ingredients: List[str]
+    instructions: List[str]
 
 
 class ModificationEdit(BaseModel):
@@ -43,6 +88,8 @@ class ModificationObject(BaseModel):
     reasoning: str = Field(description="Why this modification improves the recipe")
 
     edits: List[ModificationEdit] = Field(description="List of atomic edits to apply")
+    analysis: Optional[ReviewAnalysis] = None
+    edit_sources: Optional[List[List[str]]] = None
 
 
 class SourceReview(BaseModel):
@@ -107,6 +154,9 @@ class EnhancedRecipe(BaseModel):
     enhancement_summary: EnhancementSummary = Field(
         description="Summary of all enhancements"
     )
+    review_analysis: Optional[ReviewAnalysis] = None
+    edit_sources: Optional[List[List[str]]] = None
+    enhancement_status: Literal["enhanced", "partial", "needs_clarification", "no_applicable_changes"] = "enhanced"
 
     # Optional metadata
     description: Optional[str] = Field(description="Enhanced recipe description")
