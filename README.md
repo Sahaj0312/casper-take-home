@@ -1,5 +1,8 @@
 # Recipe Enhancement Platform
 
+For the take-home assessment, start with the [technical write-up](deliverables/ASSESSMENT.md).
+The [coding-agent transcript](deliverables/agent-trajectory.json) records the implementation work.
+
 Automatically enhances recipes by analyzing and applying community-tested modifications from AllRecipes.com. Uses LLM processing to extract meaningful recipe tweaks and apply them with full citation tracking.
 
 ## Installation
